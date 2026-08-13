@@ -1,0 +1,12 @@
+interface:
+  display_name: "Linear Workflows"
+  short_description: "Use Linear connector tools safely"
+  default_prompt: "Use $linear-workflows to discover the Linear tool surface in this session, read cheaply, respect delegate-vs-assignee, and mutate only when asked."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "linear"
+      description: "Linear MCP/app connector"
+      transport: "streamable_http"
+      url: "https://mcp.linear.app/mcp"
