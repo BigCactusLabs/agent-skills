@@ -17,8 +17,8 @@ OpenAI / Codex — `codex exec -m <id>` (omit `-m` to inherit your config defaul
 
 | Model | Model ID | Note |
 |-------|----------|------|
-| GPT-5.6 — current frontier (GA 2026-07-09) | `gpt-5.6-sol` · `-terra` · `-luna` | Sol flagship (bare `gpt-5.6` aliases to it; codex default) · Terra balanced · Luna cheapest. GPT-5.4/-mini leave Codex 2026-08-31. Treat anything below the 5.6 class as off the table |
+| GPT-5.6 — current frontier (GA 2026-07-09) | `gpt-5.6-sol` · `-terra` · `-luna` | Sol flagship (bare `gpt-5.6` aliases to it; codex default) · Terra balanced · Luna cheapest. GPT-5.4/-mini leave Codex 2026-08-31. Never pin below the 5.6 class (user policy) |
 
 Third engines (need install + auth before they can serve as a sweep): `gemini` CLI (headless via `-p` / `--output-format json`; frontier `gemini-3.1-pro-preview` is preview-only, and whether headless mode exposes web grounding is unverified) and xAI's Grok Build (early beta, coding-agent-shaped, web-research capability unverified).
 
-*Also valid but omitted above: `claude-mythos-5` (Fable 5-class, approved orgs only) and legacy pinned IDs such as `claude-opus-4-8` / `claude-opus-4-7`.*
+*Also valid but omitted above: `claude-mythos-5` (Fable 5-class, Project Glasswing only) and legacy pinned IDs such as `claude-opus-4-8` / `claude-opus-4-7`.*

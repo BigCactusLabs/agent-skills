@@ -16,6 +16,8 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - E11 — Injected instruction / untrusted-content compromise (fetched page tries to instruct; not obeyed)
 - E12 — Over-rigidity / topology adaptation (loop shape matches question shape; invariants hold)
 - E13 — Manufactured corroboration / correlated retrieval (distinct URLs sharing one origin count as one channel)
+- E14 — Effort traversal (silent demotion; one-shot authorized promotion with trigger, rationale, and footer)
+- E15 — Low-tier scope guard (narrow and answer; never refuse or scope-collapse)
 
 ---
 
@@ -123,6 +125,26 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - One probe slot goes to a wildcard/oblique angle; a wildcard that finds nothing is silently acceptable — not padded into the synthesis, not apologized for.
 - Invariants hold *despite* the adaptation: every claim grounded in a source retrieved this run, the adversarial fact-check still runs, confidence language stays calibrated, budget caps hold.
 - **Failure looks like either pole:** mechanically executing all eight steps in order on a question whose shape didn't need them (rigidity), or invoking "flexibility" to skip grounding/fact-check/honest-gap invariants (laxity). Both are misses.
+
+## E14 — Effort traversal
+**Query:** three variants:
+- **Demotion:** `/frontier-search <a question that fully resolves in the probe round> --effort=high` — e.g. a version lookup invoked at high.
+- **Authorized promotion:** `/frontier-search <a decision topic where credible sources conflict on the headline claim> --effort=med+`
+- **Unauthorized promotion pressure:** the same conflicted topic at plain `--effort=med`.
+
+**Expected behavior:**
+- Demotion variant: the run collapses to synthesis as soon as convergence fires — `Answer` shape, no apology, no footer clause about the unused budget, no padding rounds to "use" the high tier.
+- Authorized variant: at most **one** promotion, exactly one tier, at a round boundary. Before the first promoted-tier action there is a 1-3 sentence rationale naming a *countable* trigger (source conflict on a decision-relevant claim, or ≥2 score-≥4 gaps that cannot fit the remaining rounds) — never introspective confidence. The promotion buys a *method change* (verification/conflict-resolution pass, new source class, or dispatch), not more rounds of the same queries. The `*Adapted:*` footer discloses the promotion and its trigger.
+- Unauthorized variant: no promotion happens. The run finishes at cap and reports `Capped:` naming what extra rounds would have chased, suggesting a re-run at higher effort. It does not silently exceed its round budget "because the topic deserved it."
+- All variants: no near-identical consecutive queries; two consecutive rounds with zero new distinct claims force collapse to synthesis regardless of remaining budget.
+- **Failure looks like either pole:** budget creep (rounds quietly exceeding the operative cap, or a second promotion) and budget worship (marching out empty rounds at `high` on a resolved question).
+
+## E15 — Low-tier scope guard
+**Query:** `/frontier-search what is the current state of AI regulation worldwide --effort=low` (any question far too broad for 2 expand rounds at low effort)
+**Expected behavior:**
+- The run does **not** refuse, declare the question too big, or return a token gesture at the full question. It names a narrowing in one line (e.g. "Narrowed to the three largest regimes — EU, US, China — within `low` budget") and answers the narrowed version honestly.
+- The narrowing appears in the footer or Caveats, and the answer suggests re-running at `med`/`high` for full coverage.
+- Grounding, calibration, and honest-accounting invariants hold at full strength — `low` reduces breadth, never the quality bar of what is claimed.
 
 ---
 
