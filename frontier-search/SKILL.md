@@ -306,7 +306,7 @@ A second research model — **one different from the model running this loop** �
 **Dual-track sweep.** At `high` effort — or at `med` when the question implies a decision the user will act on — launch a background sweep of the full question at probe time, not after. Example for a Claude-run loop using Codex/GPT as the independent second model (the wired-up default per the orchestrator skill):
 
 ```
-codex exec -s read-only -c tools.web_search=true \
+codex exec -s read-only -c 'web_search="live"' \
   -c model_reasoning_effort=high --skip-git-repo-check --json \
   --output-last-message <scratchpad>/codex-sweep.md \
   "<question + frontier signal posture>" </dev/null
