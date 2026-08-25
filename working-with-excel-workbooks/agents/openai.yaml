@@ -1,0 +1,4 @@
+interface:
+  display_name: "Excel Workbooks"
+  short_description: "Pick safe tools and a verified workflow for Excel files"
+  default_prompt: "Use $working-with-excel-workbooks to choose the right backend and safely inspect, edit, recalculate, and verify this Excel workflow."
