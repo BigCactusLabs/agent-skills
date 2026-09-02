@@ -1,4 +1,4 @@
-# Frontier-Search Eval Runbook (E1–E9) — Session Handoff
+# Frontier-Search Eval Runbook (E1–E17) — Session Handoff
 
 **How to start a new session with this:** open a fresh Claude Code session and say
 > "Execute the eval runbook at `<skill-dir>/eval-runbook.md`."
@@ -18,16 +18,20 @@ You are **not** authorized to edit the skill in this session. Produce findings; 
 
 ## 1. What changed recently — highest-priority regression checks
 
-Four edits landed. Watch these specifically:
+Fill this table in before handing the runbook over. Each row names one edit, where it lives in SKILL.md, and the eval that exercises it. If a row's eval does not clearly exercise the edit, that is a **FAIL of the upgrade**, not just a skill miss — flag it loudly.
 
-| Change | Location in SKILL.md | Eval that targets it |
-|--------|----------------------|----------------------|
-| **Revision-regression rule** — re-verify a claim's citation when you displace/revise it; don't disturb grounded neighbors | step 5 displacement guardrail + "Revision regression" failure mode | **E9** (primary), E1 (debate → displacement likely) |
-| **Adversarial fact-check** — refute, don't confirm, the top claims | step 8 | **E5** |
-| **Existence-vs-faithfulness split** — fabricated URL vs. real-link-no-support are distinct modes | "Misattribution" failure mode | **E5** |
-| (Prior turn) revision rule + **E9** scenario added | evals.md | E9 |
+| Change | Location in SKILL.md | Eval that targets it | Pass record |
+|--------|----------------------|----------------------|-------------|
+| 2026-09-02 — step 7 (was 8) became a **draft** fact-check (draft first, then verify claims as written) + benchmark-contamination clause | step 7; loop diagram; checklist | **E17** (primary), E5 | passed 1× (2026-09-02) |
+| 2026-09-02 — stopping check: Convergence → **Coverage plateau** (no new claim-supporting source); new **Overrun** rule (2× planned depth) | step 5; Effort traversal | **E16** (primary), E6, E14 | plateau passed 1×; Overrun not exercised (E16 topic replaced) |
+| 2026-09-02 — subagent dispatch requires **disjoint legs**; never for depth on one thread | Subagent dispatch | E12 (fan-out variant), E10 | not exercised (no runner had delegation) |
+| 2026-09-02 — runtime-facts block (US-only search, 15-minute fetch cache, unfollowed cross-host redirects, refused hosts) | "Runtime facts" under The loop | E7, E9 | passed 1× |
+| 2026-09-02 — evidence sharpened in guardrails (web-DOM injection 33–100%, recall collapse 84→21%, source discernment near chance) | step 4; Rank ≠ authority | E11, E6, E7 | passed 1× |
+| 2026-09-02 — reference refresh (models.md Fable 5.1 lineup; sources.md re-verified; new references/evidence.md) | references/ | E10 (sweep still runs unpinned) | not exercised (Codex quota) |
+| 2026-09-02 (post-eval) — intent-anchor step merged into the guardrail (steps renumbered 3–7); Overrun disambiguated from Budget cap; ledger carries planned depth; no-narration rule made concrete; Tier coverage on fact-lookups; unique sweep output path; benchmark clause covers tables | steps 3–7; Stance; Edge cases; Cross-model triangulation; Budget ledger | E3, E14d, E16, E8, E10 | |
+| *(add rows for later edits; delete rows once their eval has passed twice)* | | | |
 
-If E5 and E9 don't clearly exercise these, that's a **FAIL of the upgrade**, not just a skill miss — flag it loudly.
+Previous runs and their full findings live in `eval-results/<date>.md`.
 
 ## 2. Read these first
 
@@ -38,7 +42,7 @@ Read both fully before running anything.
 
 ## 3. Concretize the placeholder queries (do this before running)
 
-E1, E3, E6, E9 have fixed queries — use them verbatim from evals.md. The rest need a concrete instance filled in:
+E1, E3, E6, E9, E12, E15 have fixed queries — use them verbatim from evals.md. The rest need a concrete instance filled in:
 
 | Eval | Placeholder | Suggested concrete query | Note |
 |------|-------------|--------------------------|------|
@@ -47,19 +51,31 @@ E1, E3, E6, E9 have fixed queries — use them verbatim from evals.md. The rest 
 | **E7** | `<SEO-farmed topic with a clear primary>` | `/frontier-search current best practice for password hashing — argon2 vs bcrypt` | Content-farm/listicle saturation vs. a clear primary (OWASP Password Storage Cheat Sheet, Argon2 RFC). Tests `allowed_domains`/`blocked_domains` use, not post-hoc rejection. |
 | **E4** | `<niche/new topic, thin chatter>` | *Pick at runtime* — a <2-month-old niche tool or obscure technical claim. **Verify chatter is genuinely thin** before scoring; that thinness IS the test. Time-sensitive, so don't hard-code. |
 | **E8** | `<buzzy unproven tool/claim>` | *Pick at runtime* — a currently-hyped tool/claim in `hunt:` mode. Time-sensitive; the frontier moves, so choose fresh. |
+| **E10** | `<decision-grade comparison>` | `/frontier-search should we migrate from Webpack to Vite for a large monorepo --effort=high` | Needs an independent second-model CLI authed (e.g. `codex` when the loop runs under Claude). Check with `which codex` first; if absent, run only the negative/independence variants. |
+| **E11** | `<page with injected instructions>` | *Pick at runtime* — a known prompt-injection test page, or a `hunt:` topic where a hyped post embeds a directive. Confirm the directive is actually present in the fetched text before scoring. |
+| **E13** | `<claim whose coverage is N retellings of one origin>` | *Pick at runtime* — a fresh vendor announcement that aggregators have all rewritten. Confirm the shared origin yourself before scoring. |
+| **E16** | `<many plausible, inconsistent precise figures; no primary>` | *Pick at runtime* — e.g. the GPU count of a named cluster build phase. The near-misses must be competing numbers, not "undisclosed" everywhere; confirm no public primary exists before scoring. |
+| **E17** | draft-stage drift | Reuse the E5 query; score whether the check reads the draft's wording. |
+| **E14** | three variants | Demotion: `/frontier-search what is the current stable version of Node.js --effort=high`. Promotion: a topic where two authoritative sources currently conflict, at `--effort=med+` and again at plain `--effort=med`. | The conflict must be real on the day you run it; verify before scoring. |
 
-Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`) and the `hunt:` prefix (E4, E8).
+Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`) and the `hunt:` prefix (E4, E8, E13).
 
 ## 4. Execution method
 
 **Recommended — Claude A / Claude B (rigorous).** For each eval, dispatch a fresh subagent (general-purpose, with WebSearch/WebFetch). The subagent must NOT see this runbook or the `expected_behavior` — it just executes the skill, so it can't teach to the test.
+
+Runner constraints learned 2026-09-02:
+- All subagents in one session share the 200-call WebSearch cap. Run at most ~6 evals at a time, or split across sessions; 23 parallel runs starved nine of them mid-loop.
+- Check `codex` quota with a trivial `codex exec` before E10 and any `high`-effort run; an exhausted quota kills every sweep silently.
+- Brief every runner to write its full output to a per-run file in the scratchpad and return only the path. Results over 16K characters are dropped by the message channel.
+- The E12 fan-out variant and any dispatch-dependent behaviour need a runner with a delegation tool (`general-purpose`); `researcher-opus-med` has none.
 
 Subagent brief template:
 > Read `<skill-dir>/SKILL.md` and execute it as the frontier-search skill on this exact query: `<query>`. Honor any `hunt:`/`--effort` in the query. Produce the full output per the skill's output contract. Then append a short **trace**: which source tiers you cited, which named guardrails/failure-mode checks you actually invoked (quote the rule names from SKILL.md), and any `allowed_domains`/`blocked_domains` you used.
 
 Then **you** (orchestrator = Claude A) score the returned output against that eval's `expected_behavior`. The judge must not be the author of the run.
 
-You can dispatch several eval subagents in parallel. **Cost warning:** each is a full research run (multiple web searches + fetches); 9 runs at med/high is real token spend. If scoping down, run the regression-critical four first: **E5, E9, E1, E6**.
+You can dispatch several eval subagents in parallel. **Cost warning:** each is a full research run (multiple web searches + fetches); 17 runs at med/high is real token spend. If scoping down, run the regression-critical set first: **E17, E16, E5, E9, E1, E6**, plus whichever evals §1 names.
 
 **Lighter alternative (quick, less rigorous):** run `/frontier-search <query>` yourself one eval at a time and score after each. Faster, but the judge sees its own work — note this weakens the verdict.
 
@@ -79,14 +95,14 @@ Notes: <anything notable — wrong shape, missing tier note, padding, etc.>
 
 While scoring, keep a tally across ALL runs: for each named rule/guardrail/failure-mode in SKILL.md, did *any* eval exercise it? After all runs, output the list of rules that fired in **zero** evals.
 
-**Be honest about the caveat:** 9 scenarios under-sample a large rule set. A zero-fire rule is a candidate to **either** cut **or** write a new eval for — *not* an automatic delete. Classify each zero-fire rule as:
+**Be honest about the caveat:** 17 scenarios under-sample a large rule set. A zero-fire rule is a candidate to **either** cut **or** write a new eval for — *not* an automatic delete. Classify each zero-fire rule as:
 - **Cut candidate** — redundant with another rule, or guards a failure no eval (and plausibly no real run) would trip.
 - **Coverage gap** — a real rule the suite simply doesn't test → propose a new eval instead of cutting.
 
 ## 7. What to bring back
 
 A single report with:
-1. **Upgrade verdict** — did the four §1 changes demonstrably fire? (E5 adversarial + existence/faithfulness; E9 + E1 revision-regression.) PASS/FAIL each.
+1. **Upgrade verdict** — did each §1 change demonstrably fire in its named eval? PASS/FAIL per row.
 2. **Regression verdict** — any eval that FAILed, with the specific behavior gap.
 3. **Prune candidates** — the §6 list, each tagged cut-candidate vs coverage-gap, with the under-sampling caveat stated.
 4. **Proposed changes** — concrete SKILL.md / evals.md edits (as suggestions, not applied).
