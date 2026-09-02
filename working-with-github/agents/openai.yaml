@@ -1,0 +1,4 @@
+interface:
+  display_name: "Working With GitHub"
+  short_description: "gh / GitHub CLI: PRs, issues, CI, Actions, releases, stacks, agent tasks"
+  default_prompt: "Use $working-with-github to inspect this GitHub URL, repository, PR/issue, PR stack, Actions run, Discussion, agent task, agent skill, or gh aw workflow with gh and git, then take the appropriate next action."
