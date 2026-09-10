@@ -3,6 +3,7 @@
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
 ## 2026-09-10
+- codex-orchestrator: add the Codex-native orchestration skill and its references and discovery metadata.
 - orchestrator: ship the nine standing subagent role files in `orchestrator/agents/`; REFERENCE.md templates replaced by a pointer; README install line.
 - orchestrator: Claude ladder rebuilt from verified public benchmarks (sonnet low → sonnet high → opus low → medium → high → xhigh; sonnet xhigh/max and opus max off the ladder, opus max user-gated); new implementer-sonnet-high / implementer-opus-low / implementer-opus-high roles; send-back cap (second rejected review stops for a user ruling); Claude tier routing evidence section.
 

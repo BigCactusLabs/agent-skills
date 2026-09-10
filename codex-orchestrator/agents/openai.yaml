@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Orchestrator"
+  short_description: "Astra-led coordination of Luna and Terra workers"
+  default_prompt: "Use $codex-orchestrator to split this task into bounded worker legs, with Astra leading, then verify and integrate the results."
