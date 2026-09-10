@@ -14,6 +14,7 @@ Skills for [Claude Code](https://claude.com/claude-code).
 ```bash
 git clone https://github.com/BigCactusLabs/agent-skills.git
 cp -r agent-skills/orchestrator ~/.claude/skills/
+cp agent-skills/orchestrator/agents/*.md ~/.claude/agents/   # orchestrator's standing subagent roles
 ```
 
 ## License
