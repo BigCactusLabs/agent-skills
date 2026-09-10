@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-10
+- orchestrator: Claude ladder rebuilt from verified public benchmarks (sonnet low → sonnet high → opus low → medium → high → xhigh; sonnet xhigh/max and opus max off the ladder, opus max user-gated); new implementer-sonnet-high / implementer-opus-low / implementer-opus-high roles; send-back cap (second rejected review stops for a user ruling); Claude tier routing evidence section.
+
 ## 2026-09-09
 - orchestrator: pins codex-cli 0.153.4 / claude-code 2.1.267; task id, repair count, reviewed-SHA manifest columns; send-back rulings and task-scoped convergence fuse; harness-defect escalation exit; provisional luna long-context gate; `codex mcp-server` deprecation; review/repair and tier-routing evidence sections; −3.3% size pass.
 
