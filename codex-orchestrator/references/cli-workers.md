@@ -13,54 +13,58 @@ codex exec --help
 codex exec resume --help
 ```
 
-The examples below match local `codex-cli 0.153.4` help (checked 2026-09-09). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
+The examples below match local `codex-cli 0.154.0` help (checked 2026-09-11; `exec`, `exec resume`, and `exec fork` all accept the helper's flags). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
 
-Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default may be Astra, which must not become an accidental bulk worker. Rungs: `-m gpt-5.6-luna -c model_reasoning_effort=max`, `-m gpt-5.6-terra -c model_reasoning_effort=xhigh`, `-m gpt-6-astra -c model_reasoning_effort=low`; Terra `max` is off the ladder. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
+Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default may be Astra, which must not become an accidental bulk worker. Rungs: `-m gpt-5.6-luna -c model_reasoning_effort=max`, `-m gpt-5.6-sol -c model_reasoning_effort=medium`, `-m gpt-6-astra -c model_reasoning_effort=low`; Terra is off the ladder and Sol `high` is not a rung. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
 
 ## Start a worker
 
-Prepare the worker's worktree and brief first, and create the output directory. Use task-specific absolute paths. A prompt file through stdin avoids shell interpolation of user text; do not construct shell code with JSON.stringify or unescaped message text.
+Prepare the worker's worktree and brief first using [execution checks](execution-checks.md#prepare-the-worktree-once). For standard Codex CLI starts/resumes/forks, use the bundled sandbox-only `scripts/dispatch.py`. It is a local argument/artifact helper, not an alternative to native delegation or an authority to launch a worker. It does not change this skill's model ladder, approvals, or review policy.
 
-Illustrative shell command after the named files and directory exist:
+Write one fresh task/generation JSON record in authorized scratch space. All fields below are required:
 
-```bash
-codex exec \
-  -m gpt-5.6-terra -c model_reasoning_effort=xhigh \
-  -s workspace-write \
-  --cd /absolute/worker-worktree \
-  --json \
-  --output-last-message /absolute/task-scratch/implementation.md \
-  - < /absolute/task-scratch/brief.txt \
-  > /absolute/task-scratch/implementation.jsonl \
-  2> /absolute/task-scratch/implementation.stderr
+```json
+{
+  "task": "TASK-ID",
+  "generation": 1,
+  "brief_revision": 1,
+  "action": "start",
+  "workspace": "/absolute/worker-worktree",
+  "brief": "/absolute/task-scratch/TASK-ID.g1.brief.txt",
+  "artifact_dir": "/absolute/task-scratch/artifacts",
+  "model": "gpt-5.6-sol",
+  "effort": "medium",
+  "permission_mode": "workspace-write"
+}
 ```
 
-Use `tools.exec_command` with a short `yield_time_ms`; keep its returned process `session_id` if still running. Do not append `&` or detach another process. Poll that process with `tools.write_stdin` as needed, with waits no longer than 60 seconds. If `functions.exec` itself yields a cell ID, use `functions.wait` only for that running cell. These two IDs manage different layers.
+Choose model/effort from the existing routing. `permission_mode` accepts only `read-only` or `workspace-write`; bypass modes are rejected before launch. Native workers inherit the parent sandbox and use native tool arguments instead of this JSON. Do not copy the Claude orchestrator's bypass-capable launcher: this skill has its own self-contained version with Codex boundaries.
 
-For read-only work, change the model to Luna where the routing test permits it and use `-s read-only`. `--skip-git-repo-check` is only needed outside a Git repository. For prompt-as-argument calls, close stdin with `</dev/null`; a prompt file redirection already ends stdin at EOF.
-
-Record the `thread_id` from the `thread.started` JSONL event separately from the shell process ID. The thread ID is needed for resume. Keep stdout JSONL separate from stderr. Parse event types; do not assume the first output line is the thread record. Inspect command failures and file changes rather than reading every reasoning event.
-
-Track task/revision/generation using [communication.md](communication.md). Treat a run as successful only after process completion, a successful terminal turn event, a nonempty final artifact for that generation, and passing acceptance checks. A failed turn, nonzero exit, absent final artifact, or truncated stream is incomplete. Preserve diagnostics and partial edits before deciding on a bounded retry. Do not automatically retry quota, rate-limit, or auth failures. A process with no recent output may still be running a long command; inspect its state against the task-specific time expectation before interrupting, not merely after a fixed number of quiet polls.
-
-## Resume
-
-Use the exact thread ID. Run the shell tool with `workdir` set to the worker's absolute worktree and re-pin model, effort, sandbox, JSON output, and final artifact. The local resume parser lacks `--cd` and `-s`; use the command working directory and the sandbox config override instead:
+Run the helper through `tools.exec_command` with a short `yield_time_ms`, preserving the **whole returned result**, including its process `session_id`:
 
 ```bash
-codex exec resume \
-  -m gpt-5.6-terra -c model_reasoning_effort=xhigh \
-  -c 'sandbox_mode="workspace-write"' \
-  --json \
-  --output-last-message /absolute/task-scratch/repair-1.md \
-  THREAD_UUID - < /absolute/task-scratch/repair-1.txt \
-  > /absolute/task-scratch/repair-1.jsonl \
-  2> /absolute/task-scratch/repair-1.stderr
+python3 "$HOME/.codex/skills/codex-orchestrator/scripts/dispatch.py" "/absolute/task-scratch/TASK-ID.g1.run.json"
 ```
 
-Resume only after the previous process has stopped. Preserve prior artifacts by using a new output path/generation per round, retaining the task ID and corrective-retry count even when switching models. Seed replacements from the actual checkpoint path. Use a fresh dispatch for a poisoned context or an independent reviewer. Do not use `--ephemeral` for a worker that may need resume.
+In code-mode, expose `text(await tools.exec_command(...))`, not only `result.output`. Do not append `&` or detach another process. The helper uses the assigned workspace as cwd, feeds the brief through a finite stdin file, and replaces itself with Codex. The harness retains the worker process and its real exit status. Poll that process with `tools.write_stdin`, with waits no longer than 60 seconds. If `functions.exec` itself yields a cell ID, use `functions.wait` only for that running cell; these IDs manage different layers. A PID is diagnostic and can be reused later; it is not a substitute for the managed session handle.
 
-For live steering, prefer native workers. Do not assume CLI queue, fork, or external-child messaging behavior based on old source notes; verify the available control surface before depending on it.
+Artifacts share `<task>.g<generation>`: `.dispatch.json`, `.events.jsonl`, `.stderr`, `.last.md`, and a separately authored `.report.md`. The helper creates the artifact directory and refuses any existing output path for that generation. Keep old files and advance the generation instead of overwriting them. Its exclusive dispatch marker also prevents two callers from launching the same generation through this helper. The marker records requested argv, cwd, brief hash, and paths; it proves preparation, not completion or acceptance. Update the current manifest record after launch, result collection, and adjudication; appended history alone is insufficient.
+
+Assign a write worker's detailed report to its owned writable `.report.md` path; the CLI owns `.last.md`. A read-only worker returns its full report as the final response for Astra to persist from `.last.md`. A denied optional report write is reported once with the content returned; do not widen permissions or repeat the write through another tool. Apply [report ownership](briefs-and-repairs.md#report-ownership-and-recovery).
+
+Record the thread ID from `thread.started` wherever it occurs in the JSONL stream, separately from the process handle. Keep requested model/effort separate from actual settings exposed by the runtime. The helper initializes runtime values as unknown; do not infer them from config defaults, requested argv, or worker guesses. If observed later, record the evidence source in the current manifest. When auditing usage, use each thread's final cumulative total or per-turn differences; do not sum cumulative terminal totals across resumed generations.
+
+Optional JSON fields: `thread_id` (required for resume/fork), `output_schema` (absolute existing file), `web_search` (`disabled`, `cached`, or `live`), and `skip_git_repo_check` (boolean, false by default; only needed outside Git). Effort accepts `none`, `low`, `medium`, `high`, `xhigh`, `max`; `ultra`, `minimal`, and `persistent` are refused. No arbitrary extra CLI arguments are accepted. For a specialized invocation that the helper does not support, inspect current CLI help and preserve explicit model/effort/sandbox, finite stdin, assigned cwd, distinct artifacts, and the existing approval boundaries. Unsupported fields or denied actions do not authorize permission bypass.
+
+Track task/revision/generation using [communication.md](communication.md). Treat a run as successful only after process completion, a successful terminal turn event, a nonempty final artifact for that generation, and passing acceptance checks. A failed turn, nonzero exit, absent final artifact, or truncated stream is incomplete. Inspect command failures and file changes rather than reading every reasoning event. Preserve diagnostics and partial edits before recovery or retry. If the process and child writes stopped and saved current-generation evidence suffices, Astra can verify the output and write a recovery report. Keep acceptance separate; the interrupted CLI turn remains incomplete. Do not resume merely to obtain a final message, or automatically retry auth/quota/rate-limit failures. Quiet output may mean a long command is still running; inspect its state against the task-specific expectation before interrupting.
+
+## Resume and fork
+
+Apply the [resume check](briefs-and-repairs.md#task-record-and-resume-check), including counters and the recorded user/project review policy. Wait for the prior process and owned writes to stop, advance `generation`, and retain task identity and earlier evidence. Set `action` to `resume` with the exact thread UUID, point `brief` to the new instructions, and repeat model, effort, workspace, and permission mode even for same-tier environment recovery. Invoke the same helper; it supplies the cwd and sandbox config because resume lacks `--cd` and `-s`.
+
+For a fork, verify `codex exec fork --help` on the installed CLI first, then use `action: fork` with the source UUID and a fresh generation. Record the new thread ID from the result. Forking preserves the source context, so it does not cure a poisoned approach or provide a fresh independent reviewer. A fresh replacement gets a self-contained brief seeded from the actual checkpoint, with task identity, counters, and resolved policy preserved.
+
+The resumed brief assigns the new generation's detailed report path when the worker owns one. Never use `--ephemeral` for a worker that may need resume. For live steering, prefer native workers. Do not assume CLI queue or external-child messaging behavior based on source notes; verify the available control surface before depending on it.
 
 ## Tool and output limits
 
