@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-15
+- codex-orchestrator: sync the installed bundle with current worker routing, task/review evidence rules, tested sandboxed dispatch helper, and the completed Pilot 4 recovery/status workflow.
+
 ## 2026-09-10
 - codex-orchestrator: add the Codex-native orchestration skill and its references and discovery metadata.
 - orchestrator: ship the nine standing subagent role files in `orchestrator/agents/`; REFERENCE.md templates replaced by a pointer; README install line.

@@ -4,7 +4,7 @@ Skills for [Claude Code](https://claude.com/claude-code) and Codex.
 
 ## Skills
 
-- **[codex-orchestrator](codex-orchestrator/SKILL.md)** — coordinate bounded worker tasks under GPT-6 Astra in Codex, with native-agent, CLI-worker, and review guidance.
+- **[codex-orchestrator](codex-orchestrator/SKILL.md)** — coordinate bounded worker tasks under GPT-6 Astra in Codex, with native-agent, CLI-worker, review, and opt-in persisted-bridge guidance.
 - **[orchestrator](orchestrator/SKILL.md)** — delegate slow, token-heavy work to background workers (Codex CLI processes and Claude subagents) while Claude orchestrates: decompose, spec, dispatch, steer, verify, merge.
 - **[frontier-search](frontier-search/SKILL.md)** — frontier-biased adaptive web research loop: tiered sourcing, gap-driven expansion, adversarial fact-check before synthesis.
 - **[linear-workflows](linear-workflows/SKILL.md)** — work the Linear MCP surface safely: discover tools at runtime rather than trusting a memorised list, read cheaply, keep `delegate` and `assignee` distinct, and mutate only on request.
