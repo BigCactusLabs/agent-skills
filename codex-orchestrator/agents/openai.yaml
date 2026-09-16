@@ -1,4 +1,4 @@
 interface:
   display_name: "Codex Orchestrator"
   short_description: "Astra-led coordination of Luna, Sol, and Claude Opus workers"
-  default_prompt: "Use $codex-orchestrator to split this task into bounded worker legs, with Astra leading, then verify and integrate the results."
+  default_prompt: "Use $codex-orchestrator in this Astra session to assign bounded worker tasks, then verify and integrate the results. Keep this session as the sole lead."

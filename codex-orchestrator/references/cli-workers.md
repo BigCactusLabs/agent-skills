@@ -1,8 +1,10 @@
 # CLI fallback workers
 
-Use only when native delegation is unavailable or a separate CLI process is needed, and delegation is permitted. These are worker processes; Astra remains the lead. Do not start an external process to evade native limits, tool restrictions, sandboxing, or an approval rejection.
+Use only when native delegation is unavailable or a separate CLI process is needed, and delegation is permitted. These are bounded workers; the invoking Astra session remains the sole lead. Never copy its orchestration role into a CLI worker. Do not start an external process to evade native limits, tool restrictions, sandboxing, or an approval rejection.
 
 ## Preflight
+
+Every CLI write worker needs its own manually prepared worktree (`git worktree add -b <task> <path>`), with a verified base and required inputs. The 2026-09-11 probe of Codex 0.154.0's native `--worktree` was not adopted: detached HEAD, resume ran in the invoking cwd, and `resume --worktree` was refused. This dated probe is not a claim about later versions; preserve explicit workspace control unless a new probe supports a change.
 
 Read local help once before the first CLI dispatch:
 
@@ -46,7 +48,7 @@ Run the helper through `tools.exec_command` with a short `yield_time_ms`, preser
 python3 "$HOME/.codex/skills/codex-orchestrator/scripts/dispatch.py" "/absolute/task-scratch/TASK-ID.g1.run.json"
 ```
 
-In code-mode, expose `text(await tools.exec_command(...))`, not only `result.output`. Do not append `&` or detach another process. The helper uses the assigned workspace as cwd, feeds the brief through a finite stdin file, and replaces itself with Codex. The harness retains the worker process and its real exit status. Poll that process with `tools.write_stdin`, with waits no longer than 60 seconds. If `functions.exec` itself yields a cell ID, use `functions.wait` only for that running cell; these IDs manage different layers. A PID is diagnostic and can be reused later; it is not a substitute for the managed session handle.
+In code-mode, expose `text(await tools.exec_command(...))`, not only `result.output`. Do not append `&` or detach another process. The helper uses the assigned workspace as cwd, feeds the brief through a finite stdin file, and replaces itself with Codex. The harness retains the worker process and its real exit status. Poll that process with `tools.write_stdin`, with waits no longer than 60 seconds. Use the handle as the primary completion signal; after startup inspection, read logs for failures, missed milestones, or specific decisions, not between routine waits merely to confirm activity. If `functions.exec` itself yields a cell ID, use `functions.wait` only for that running cell; these IDs manage different layers. A PID is diagnostic and can be reused later; it is not a substitute for the managed session handle.
 
 Artifacts share `<task>.g<generation>`: `.dispatch.json`, `.events.jsonl`, `.stderr`, `.last.md`, and a separately authored `.report.md`. The helper creates the artifact directory and refuses any existing output path for that generation. Keep old files and advance the generation instead of overwriting them. Its exclusive dispatch marker also prevents two callers from launching the same generation through this helper. The marker records requested argv, cwd, brief hash, and paths; it proves preparation, not completion or acceptance. Update the current manifest record after launch, result collection, and adjudication; appended history alone is insufficient.
 

@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-16
+- codex-orchestrator: keep the invoking Astra session as sole lead with bounded workers; shorten the entrypoint and sync proportional supervision, risk-based review, compact task records, and dated routing evidence.
+
 ## 2026-09-15
 - codex-orchestrator: sync the installed bundle with current worker routing, task/review evidence rules, tested sandboxed dispatch helper, and the completed Pilot 4 recovery/status workflow.
 
