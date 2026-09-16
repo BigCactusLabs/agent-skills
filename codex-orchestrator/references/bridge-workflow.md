@@ -1,12 +1,15 @@
 # Opt-in orchestrator bridge
 
-Use this route when the user asks to run work through `orchestrator-bridge`. Ordinary
-orchestration keeps the native-worker and headless-review workflow in SKILL.md.
+Use this route only for an explicit user request to transfer sole-lead ownership to
+`orchestrator-bridge`. Invoking the skill in an existing Astra session does not authorize
+another lead. Ordinary orchestration keeps the native-worker and headless-review workflow.
 If this lead is already hosted by the adapter, follow its developer contract and existing
 state; do not start another adapter or move the task to a new identity.
 
-The bridge owns a separate persisted SDK lead. It does not attach itself to the current
-desktop conversation. The outer operator owns its process, final verification, and fallback.
+The bridge starts a separate persisted SDK session; it cannot attach to the current desktop
+conversation. During an authorized transfer, the desktop stops assigning implementation work
+and becomes the process operator and final verifier. The SDK session is then the sole
+orchestrator. Never run both as leads for the same task.
 
 ## Prepare and start
 

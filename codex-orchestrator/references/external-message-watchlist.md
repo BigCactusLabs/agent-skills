@@ -1,5 +1,7 @@
 # ExternalMessage bridge: opt-in status and pilot history
 
+Current boundary (2026-09-16): invoking this skill keeps the existing Astra session as sole lead. The bridge requires an explicit transfer of that role under [bridge-workflow.md](bridge-workflow.md); the historical pilots below do not authorize launching another orchestrator.
+
 Decision recorded 2026-09-09: keep the current headless Claude review path. It already supports background reviews and returns findings to Astra as tool evidence. The immediate benefit of adding an SDK bridge is small.
 
 Update 2026-09-11: the user chose to prototype the bridge after the probes and research below. The adapter lives in `~/.codex/orchestrator-bridge/` (own git repo; README there). It hosts a persisted `gpt-6-astra` thread, validates an inbox, delivers results as `ExternalMessage`, and owns the task counters, checkpoint gate, and run numbering. At that point the operating rules were unchanged pending the pilots; the headless review path remained the default.

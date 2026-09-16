@@ -27,6 +27,15 @@ Use scratch records and existing or synthetic evidence to walk these decisions w
 
 | Case | Expected decision |
 |---|---|
+| Skill invoked from an existing Astra session | That session stays lead without a model-selection ceremony or another lead launch. A bounded Astra `low` worker may implement an owned task but cannot orchestrate or delegate. |
+| Background coordination appears useful | Keep the current lead. Do not launch a bridge unless the user explicitly requests transfer of sole-lead ownership; an already bridge-hosted lead keeps its existing state. |
+| Reviewer runs normally for several minutes; useful lead work is complete | Wait on completion notifications or the original managed handle within session limits. After startup inspection, do not read streams merely for status updates; inspect again only for a failure, missed milestone, or evidence needed for a decision. |
+| Native inspection after two timeouts shows normal progress | Record the next expected milestone and resume waiting. Do not repeat the same status inspection every two timeouts or let sibling messages conceal an overdue task. |
+| Worker owns implementation; the lead has independent acceptance preparation | Prepare only the needed acceptance/integration work, without duplicating implementation; wait when that work is complete. |
+| Bounded repair changes one validation condition | Use the lead's diff review and targeted contract checks if they establish closure; a new branch alone does not require independent re-review. |
+| Small repair changes persisted-write retry semantics | Assess material unreviewed behavior and shared invariants; retain independent scrutiny and contract-derived duplicate-write, uncertain-outcome, and unsafe-retry checks. |
+| User says “keep going” on an agreed feature | Advance the next usable milestone within the authorized objective, without unrelated acceptance requirements or a new approval gate. Keep changes independently reviewable; do not defer a consequential review until the whole feature is built. |
+| Small local task, then a separate multi-worker assignment | Keep the local task local without a manifest. Use core records for the workers and add repair, authorization, interruption, and validation lineage detail only when relevant; existing history survives replacement. |
 | Contradictory state rules; omitted and unchanged values interact | Astra settles one behavior table from authoritative contracts before dependent code; a brief-only correction is separate from a code repair. |
 | Two rejected rounds under default review policy, then compaction or a replacement | Read the actual record and brief; stop the next implementation attempt at the user checkpoint. A task/model rename does not reset counters. |
 | User decision already covers the rejection count and snapshot | Continue within the recorded ruling without asking again; a later rejection needs a new checkpoint. |
