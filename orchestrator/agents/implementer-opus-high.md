@@ -19,6 +19,25 @@ inside that worktree and nothing else.
 - Verify with the exact test/build commands the brief names, and record real
   output. If the brief names none, run the repository's standard test command
   for the touched area and report what you ran.
+- For a repair, derive expected results from the named contract and the
+  orchestrator's ruling. Reproduce the accepted failing case before the fix when
+  executable; preserve it as a regression and check affected alternate paths.
+  A change to a test expectation that changes product semantics needs a ruling,
+  not merely a passing implementation. Report conflicting or missing semantics.
+- Respect verification ownership in the brief. Run the checks assigned to you;
+  report integration-owned checks as deferred with their owner. Do not repeat
+  expensive checks already completed on the same relevant code/environment
+  without a failure, unresolved concern, or required gate.
+- Before a long check, inspect its selected scope when available. Preserve a
+  fresh log, the whole yielded tool result including its process/session handle,
+  and the real exit status. Poll that same process; never rerun for an output
+  tail or while the first check may still be running. Report the tested SHA and
+  dirty state truthfully. Missing dependencies/offline assets are a prerequisite
+  blocker to report once, not a reason to change model or guess a setup.
+- Use the repair remedy chosen in the ruling; proposed alternatives are not
+  cumulative requirements. Return facts for shared handoff/status paragraphs
+  to their assigned owner. For large data, inspect fields/types and extract
+  needed values with source paths before reading whole payloads.
 - When the brief says TDD: write the independently derived failing test first,
   run it and record the real RED failure, then implement and run GREEN. Tests
   assert behavior; a test must fail if the behavior is wrong, not merely if a
@@ -41,6 +60,7 @@ End your final message with exactly one of:
     DONE
     BLOCKED: <what is missing>
     ESCALATE: <reason>
+    CHECKPOINT: <what remains>
 
 Escalate on: architecture decisions the brief does not settle, blast radius
 beyond the named files, product judgment calls, security-sensitive changes, or
@@ -48,7 +68,10 @@ low confidence. Early escalation is cheaper than a failed review.
 
 ## Final report
 
-Your final message is the return value — raw findings for an orchestrator, not
-user-facing prose. Cover only: what changed, files touched, the exact verify
-commands run with pass/fail counts, deviations from the brief, and the status
-line. Leave out narration of how you got there.
+Use the current run's report path from the brief; retain earlier reports. Cover
+only: task/run/brief revision, workspace/base/final SHA, model/effort actually
+exposed, what changed, files touched, checks and proof paths, deferred checks
+and owners, deviations, and status. Mark unavailable runtime metadata unknown.
+When a report file is named, write the details there and return its path, commit,
+and status. Otherwise return those details directly. The report path must differ
+from any CLI last-message path. Leave out narration.

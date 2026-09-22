@@ -17,7 +17,7 @@ codex exec resume --help
 
 The examples below match local `codex-cli 0.154.0` help (checked 2026-09-11; `exec`, `exec resume`, and `exec fork` all accept the helper's flags). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
 
-Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default may be Astra, which must not become an accidental bulk worker. Rungs: `-m gpt-5.6-luna -c model_reasoning_effort=max`, `-m gpt-5.6-sol -c model_reasoning_effort=medium`, `-m gpt-6-astra -c model_reasoning_effort=low`; Terra is off the ladder and Sol `high` is not a rung. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
+Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default may be Astra, which must not become an accidental bulk worker. Rungs: `-m gpt-6-luna -c model_reasoning_effort=max`, `-m gpt-6-sol -c model_reasoning_effort=high`, `-m gpt-6-astra -c model_reasoning_effort=low`; Terra and every `gpt-5.6-*` tier are off the ladder, and Sol `medium` is not a rung. Before the first Sol dispatch, run a one-turn `-m gpt-6-sol -s read-only` probe: its catalog entry sets `node_repl_auto_review_required`, whose effect on worker runs is unverified. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
 
 ## Start a worker
 
@@ -34,8 +34,8 @@ Write one fresh task/generation JSON record in authorized scratch space. All fie
   "workspace": "/absolute/worker-worktree",
   "brief": "/absolute/task-scratch/TASK-ID.g1.brief.txt",
   "artifact_dir": "/absolute/task-scratch/artifacts",
-  "model": "gpt-5.6-sol",
-  "effort": "medium",
+  "model": "gpt-6-sol",
+  "effort": "high",
   "permission_mode": "workspace-write"
 }
 ```

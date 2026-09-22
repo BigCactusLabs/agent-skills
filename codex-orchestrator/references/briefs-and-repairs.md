@@ -4,7 +4,7 @@ Read the worker-brief section before dispatch. Read the behavior and repair sect
 
 ## Worker brief
 
-Give a self-contained brief even when some history is inherited. Use the fields that affect this assignment; omit inapplicable peer, shared-resource, and checkpoint detail. Keep task/revision/generation, scope, permissions, acceptance, and report ownership explicit. The template does not require a new document for each field.
+Make each brief usable without inherited conversation: keep task/revision/generation, scope, ownership, permissions, acceptance, and report ownership explicit. Reference settled background through a shared contract with an accessible path and revision; self-contained does not mean copying that contract into every role's brief. Prefer existing authoritative docs over a competing specification. Omit inapplicable fields; the template does not require a document per field.
 
 ```text
 Role: bounded worker; Astra remains the orchestrator. Do not spawn agents.
@@ -15,12 +15,12 @@ Readiness: [verified setup result and required environment/assets]
 Ownership: [exclusive paths; read-only or write-capable]
 Shared resources: [lockfiles, generated outputs, ports/caches; their owners]
 Peers: [none, or verified messaging capability, exact handles, scope, no-reply deadline]
-Inputs: [verified facts, artifact paths, decisions, failed approaches]
-Contract: [authoritative paths/versions; behavior table or rulings when needed]
+Inputs: [essential facts and paths to decisions, failed approaches, and evidence]
+Contract: [shared authoritative path/revision; relevant behavior rules]
 Checkpoint: [path when continuing/replacing a worker; superseded decisions]
 Constraints: [repo rules, invariants, dependencies, permitted tools/actions]
 Acceptance: [contract-derived expected cases and verified commands]
-Verification owners: [selected worker checks; full/integration checks and their owner]
+Verification owners: [implementer's regression cases and existing harness; integration owner]
 Reports: [generation-specific paths; who returns content and who saves it]
 
 Stay within the assigned ownership. Other agents may be editing nearby files;
@@ -44,7 +44,7 @@ Return: what changed/found, paths, checks with actual results, deviations,
 unresolved risks, workspace/base, and model/effort if exposed by the harness.
 Do not invent runtime metadata. Report task/revision/generation and artifact paths.
 When steering or peers depend on a reply tool, report whether you have that tool.
-Use at most 150 lines; shorter is preferred.
+Keep the result compact; link detailed logs and evidence. At most 150 lines.
 End with one status: DONE, BLOCKED: reason, ESCALATE: reason,
 or CHECKPOINT: remaining work.
 ```
@@ -72,7 +72,7 @@ Carry this table, the authoritative paths, exclusions, and verification ownershi
 
 ## Repair brief
 
-First classify the findings: implementation defect, contract decision, integration-owned work, or advisory observation. Decide acceptance from the demonstrated impact, not the reviewer's severity label alone. Group findings that concern the same invariant and send one decided batch of corrections.
+Classify findings as implementation defects, contract decisions, integration-owned work, or advisory observations. Decide acceptance from demonstrated impact, not severity alone. Group by invariant and send a decided delta: changed requirements, finding IDs, evidence, expected cases, and checks. Reference the current contract and prior brief for unchanged rules; update the shared contract when a ruling changes it.
 
 Choose the smallest change that satisfies each accepted finding. When a reviewer offers “A or B,” select one adequate remedy and record why; do not silently require both. Removing an unsupported redundant claim may suffice. Capture, hashing, caching, or per-package parsing adds behavior to specify and review; optional capability is a separate scope choice.
 
@@ -94,7 +94,7 @@ Use independent review at a coherent milestone when changed risk and uncertainty
 Re-review a repair when it introduces material behavior or risk outside the reviewed scope, changes a shared invariant, or leaves an accepted finding unresolved. An enumerated validation fix can close through Astra's diff review and targeted checks that directly establish required behavior. A persisted-write retry change needs scrutiny of duplicate writes, uncertain outcomes, and unsafe retries even if its diff is small. A new branch or error label alone does not require another reviewer. Do not request a review solely for confirmation, to reset a counter, or for each internal phase. Fewer rounds never justify accepting a material defect.
 
 - Follow [execution checks](execution-checks.md): verify prerequisites before launch, inspect test selection, and retain check logs, yielded handles, real exits, and the actual tested snapshot. Supply commands already verified in this repository, including the correct toolchain and required per-process environment. Share a discovered environment fix with every affected worker. Reuse the available toolchain and dependency setup for scratch probes; avoid a fresh dependency resolution for every review.
-- Workers own targeted tests and boundary checks. Name one owner for expensive full builds, simulator runs, or E2E checks on the integrated result. A leg may need its own build to verify an interface or platform change. Preserve repository-required gates; record deferred work rather than claiming it ran.
+- Existing implementation workers author and run routine regressions using shared harnesses and fixtures. The lead defines acceptance cases and independently inspects assertions and integration; see [test ownership](execution-checks.md#test-ownership-and-reuse). Name one owner for expensive full builds, simulator runs, or E2E checks. Preserve required gates and record deferred work.
 - Re-run a completed expensive check when relevant code or environment changed, a failure or unresolved concern requires it, or final integration needs validation. Independent short host checks remain useful. Limit concurrent expensive work when processes compete for memory or a simulator.
 - Give the reviewer the exact snapshot (base/diff and relevant hashes, including dirty/untracked inputs), authoritative contracts, behavior table or rulings, ownership/exclusions, prior finding IDs for a repair, and completed checks. Require evidence for new acceptance failures; retain material product-promise violations even when they expose a bad ruling. Already assigned tracker/handoff work belongs to its named owner.
 - Ask for a concrete failing scenario, expected and observed results, and a reproduction command/path where available. Keep acceptance findings separate from concise advisory observations. Return the reviewed snapshot and closure status of prior finding IDs so Astra can distinguish a residual defect, a regression, and a new contract decision.
@@ -103,7 +103,7 @@ Headless Claude returns analysis with Read/Grep/Glob only. Astra runs requested 
 
 ## Task record and resume check
 
-Use one authoritative record per task in task scratch space for multiple workers, long work, and every repair. Short local work needs no manifest. Keep core facts in the record or linked current brief; do not duplicate them across both. Retain prior generations and artifact links. Update current state after dispatch, collection, and adjudication; append-only history is not a substitute. Astra owns this state; worker reports cannot reset counters or grant continuation.
+Use one authoritative record per task for multiple workers, long work, and repairs; short local work needs no manifest. Keep facts in the record or linked brief, without duplication. Retain prior generations and artifact links. Update changed fields after dispatch, collection, and adjudication; neither rewritten narratives nor append-only history replaces current state. Reuse existing collection/snapshot tools. Astra owns acceptance and continuation; mechanical updates cannot reset counters or grant authority.
 
 Core record (adapt the shape; no new tracking service is needed):
 

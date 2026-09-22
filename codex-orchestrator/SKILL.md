@@ -9,18 +9,18 @@ description: Coordinate bounded worker tasks under GPT-6 Astra in Codex. Use for
 
 ## Route the work
 
-Delegate once goal, ownership, and acceptance are clear, before completing the investigation yourself. Keep architecture, ambiguous tradeoffs, taste, and contested evidence with the lead. A bounded discovery leg can establish facts for implementation.
+Delegate when goal, ownership, and acceptance are clear. Use bounded discovery for missing facts; retain architecture, taste, and disputed decisions with the lead.
 
-Delegate suitable independent legs within session restrictions. Keep small tasks local; never bypass a delegation prohibition with CLI workers. Minimize total work, including the lead: do not duplicate a worker's investigation or implementation. Advance agreed acceptance or integration work, then wait. Do not invent checks, documentation, or adjacent work to stay occupied.
+The lead decides and verifies; workers and existing tools handle routine execution. Keep small tasks local; delegate independent legs within session restrictions. Reuse test/bookkeeping machinery; never duplicate worker work or invent activity while waiting. Optimize combined lead-plus-worker cost per accepted result using verified input, cache, and output rates; token volume or lead share alone is insufficient.
 
 | Work | Model | Effort |
 |---|---|---|
-| Enumerated recon, extraction, version lookups, log analysis | `gpt-5.6-luna` | `max` |
-| Mechanical edits and docs sync that pass all three checks below | `gpt-5.6-luna` | `max` |
-| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-5.6-sol` | `medium`; `high` is not a rung, Terra is off the ladder |
+| Enumerated recon, extraction, version lookups, log analysis | `gpt-6-luna` | `max` |
+| Mechanical edits and docs sync that pass all three checks below | `gpt-6-luna` | `max` |
+| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6-sol` | `high`; `medium` and `max` are not rungs, no GPT-5.6 tier is on the ladder, Terra is off |
 | React and component implementation (any acceptance check) | Claude Opus via headless CLI | `high`; the one authorized Claude implementation lane, own worktree, Codex reviews the diff |
-| Review-caught implementation (Astra's own review is the acceptance check), terminal-heavy build/test/fix loops, and the retry after Sol `medium` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
-| Independent code review | Claude Opus via headless CLI | `high`; `xhigh` for broad or sensitive changes |
+| Review-caught implementation (Astra's own review is the acceptance check), terminal-heavy build/test/fix loops, and the retry after Sol `high` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
+| Independent code review | Claude Opus via headless CLI | `high`, including broad or sensitive changes; `xhigh` only after a `high` review fell short on a long-horizon change |
 | Adversarial, creative review of a complex question or design | Claude Fable 5.1 via headless CLI | `medium`; thought partner to Astra |
 | Exceptionally difficult question needing extra creative exploration | Claude Fable 5.1 via headless CLI | `high`; super thought partner, used selectively |
 | Hard problems, unresolved design, sensitive review, failed Astra `low` work | Astra lead | Current session setting |
@@ -33,11 +33,11 @@ Delegate suitable independent legs within session restrictions. Keep small tasks
 
 An enumerated rename or exact docs sync can go to Luna with mechanical checks. A persisted-state retry policy starts at Astra `low`; the lead reviews it and retains product decisions.
 
-**Ladder:** Luna `max` → Sol `medium` → bounded Astra `low` → the existing lead. Effort is pinned. Mechanical acceptance starts at Luna if it passes the latitude test, otherwise Sol; review-caught work starts at Astra `low`. A Luna failure allows one Sol attempt; a Sol failure gets a fresh Astra `low` worker. Failed Astra work returns to the lead for a decision and re-scope. If only runway is missing—sound approach, improving checks, local blocker—continue the same worker before changing tier. React allows one Opus `high` retry, then the lead decides; do not substitute a Codex implementer.
+**Ladder:** Luna `max` → Sol `high` → bounded Astra `low` → the existing lead. Effort is pinned. Mechanical acceptance starts at Luna if it passes the latitude test, otherwise Sol; review-caught work starts at Astra `low`. A Luna failure allows one Sol attempt; a Sol failure gets a fresh Astra `low` worker. Failed Astra work returns to the lead for a decision and re-scope. If only runway is missing—sound approach, improving checks, local blocker—continue the same worker before changing tier. React allows one Opus `high` retry, then the lead decides; do not substitute a Codex implementer.
 
 Routing is user policy, not a quota claim. Output-token counts do not establish allowance charges. Verify current pricing before recommending changes; user authorization is required. Consult [routing history](references/routing-history.md) only when reassessing policy.
 
-Use full Codex model IDs and explicit effort. Authorized overrides: Luna `max`, Sol `medium`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `high`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra, raise Sol effort, substitute older models, or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
+Use full Codex model IDs and explicit effort. Authorized overrides: `gpt-6-luna` `max`, `gpt-6-sol` `high`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `high`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra, move Sol off `high`, substitute older models (the `gpt-5.6-*` tiers included), or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
 
 ## Select the execution surface
 
@@ -63,13 +63,13 @@ A HEAD-based worktree omits uncommitted changes. If needed, use a repo-supported
 
 Assign one owner or isolate shared resources: Git state, lockfiles, generated files, test databases, ports, and caches. Workers never stage or commit in a shared checkout; isolated local commits need an explicit assignment. External writes and destructive actions stay with the lead under user authorization, including fresh confirmation where required for force-push, `reset --hard`, `rm -rf`, and closing a PR. Worktree/branch cleanup is a separate action. Serialize unresolved shared invariants. If unexpected edits appear in owned paths, stop that write leg and report the conflict; do not overwrite or silently reconcile them.
 
-Give shared handoff/status paragraphs one lead or integration owner. Update them once per coherent milestone or when new evidence invalidates them; workers return verified facts and maintain their owned technical docs as correctness requires. A small shared-summary edit does not need a separate docs worker.
+Keep current milestone status in one authoritative record. The lead decides what is true; an existing worker can apply exact doc edits within owned paths. Change other docs when their instructions or contracts change, not at every checkpoint. Correct misleading docs promptly; make tiny summary edits locally.
 
 ## Brief and task state
 
-Before dispatch, use the self-contained [worker brief](references/briefs-and-repairs.md#worker-brief): outcome, verified inputs and failed approaches, contract, ownership, constraints, acceptance, verification owners, and report paths. Include applicable AGENTS.md rules. For interacting state rules, settle the behavior table in that reference before dependent code; check it against authoritative schemas. Do not dictate implementation unless the contract requires it or add a plan reviewer to a small enumerated task.
+Use the [worker brief](references/briefs-and-repairs.md#worker-brief): explicit scope, ownership, permissions, acceptance, and verification/report owners, with reachable references to shared contracts and repo rules. Keep settled context in one versioned contract; send repair deltas. Resolve interacting state rules against authoritative schemas before implementation. Do not add a plan reviewer to small enumerated work.
 
-For multiple workers, long work, or a repair, keep the [compact task record](references/briefs-and-repairs.md#task-record-and-resume-check) in task scratch space. Add conditional detail for repairs, user rulings, interruptions, shared resources, and validation carried across snapshots. Preserve task/revision/generation, current handles, requested versus observed settings, and separate turn, report, and acceptance states. Update the current record after dispatch, collection, and adjudication. Small local tasks need neither a worker nor a manifest.
+For multiple workers, long work, or repairs, keep the [compact task record](references/briefs-and-repairs.md#task-record-and-resume-check). Add conditional recovery detail as needed. Preserve identity, handles, requested versus observed settings, and separate turn/report/acceptance states. Update current fields after dispatch, collection, and adjudication using existing helpers; avoid rewritten narratives or a new coordination framework. Small local tasks need no manifest.
 
 For long legs, assign an authorized checkpoint artifact and use [semantic checkpoints](references/briefs-and-repairs.md#checkpoints). Preserve decisions, counters, and user rulings across replacements. Read-only workers return content for the lead to save; successors receive the actual checkpoint path, not only a new summary.
 
@@ -81,7 +81,9 @@ Astra may authorize named native pairs with verified messaging tools to exchange
 
 ## Supervise and direct
 
-Do useful independent work, then wait on native completion notifications or the original managed handle. Inspect startup metadata once; read diagnostics for failures, missed milestones, or decisions needing evidence. Normal progress means return to waiting, without routine stream reads. Follow session communication/wait limits: defaults are waits at most 60 seconds and updates at least every 60 seconds. Updates need no diagnostic call.
+Reduce avoidable lead turns first. After useful independent work, use one supported wait path at the longest permitted interval: default waits at most 60 seconds, updates at least every 60 seconds. Avoid short resume loops and extra wrappers. Inspect startup once; diagnose failures, missed milestones, or decisions needing evidence. User updates need no status/log call.
+
+Read focused diffs/ranges to answer a specific question; keep detailed logs on disk and routine results compact. Preserve handles, exits, snapshot identity, and evidence paths. Full reads remain appropriate when needed; avoid repeated unchanged context, not necessary verification. See [execution checks](references/execution-checks.md#focused-evidence-and-bookkeeping).
 
 Before any implementation follow-up, replacement, resume, or material steer, read the actual record/current brief and apply the [resume check](references/briefs-and-repairs.md#task-record-and-resume-check). After compaction, re-read this section too. Under the default policy, the second rejected review requires a user checkpoint before another implementation attempt, and at most three corrective retries follow a task across replacements. [Communication](references/communication.md#repairs-and-replacements) defines covering user decisions and rejection resets. Brief corrections and runtime recovery do not erase repair/rejection counts.
 
@@ -99,9 +101,9 @@ Worker completion is a report, not proof. Read actual diffs/artifacts and verify
 
 Review a stable snapshot identified by base/diff and relevant hashes, including dirty/untracked inputs. Changed content makes the prior report stale for that content. Pass author-reported risks as unverified leads, without the author's verdict. Use independent Claude review for a coherent milestone when risk and uncertainty justify it, then perform Astra's review. Consequential persistence, concurrency, security, and live-write behavior warrant particular scrutiny; line count is only a scope signal. Preserve required repo gates and user-requested reviews. If Claude is unavailable, report the missing cross-family check and perform Astra's review; do not silently substitute another family.
 
-Use the [review brief and re-review criteria](references/briefs-and-repairs.md#verification-and-review-brief) for material changes outside reviewed scope, changed shared invariants, or unresolved accepted findings. Bounded fixes close through Astra's diff review and targeted checks when these establish the contract. Do not commission a confirmatory review. Opus is `high` ordinarily, `xhigh` for broad/sensitive review; `max` remains user-gated as defined in [Claude routing](references/claude-reviews.md#review-routing).
+Use the [review brief and re-review criteria](references/briefs-and-repairs.md#verification-and-review-brief) for material changes outside reviewed scope, changed shared invariants, or unresolved accepted findings. Bounded fixes close through Astra's diff review and targeted checks when these establish the contract. Do not commission a confirmatory review. Opus is `high`, broad/sensitive review included; `xhigh` only after a `high` review fell short on a long-horizon change; `max` remains user-gated as defined in [Claude routing](references/claude-reviews.md#review-routing).
 
-Assign targeted checks to workers and one owner to expensive integration builds, simulator runs, or E2E checks. Follow [execution checks](references/execution-checks.md) for scope, logs, full yielded handles, real exit status, and actual tested snapshots. Preserve repo-required gates. Repeat expensive checks for relevant changes, failures, unresolved concerns, or integration validation; never rerun for an output tail or merely a newer SHA. Record deferred owners and justified validation carry-forward separately from what actually ran.
+The lead defines acceptance and verifies integration. Existing implementers author/run routine regressions using shared fixtures and harnesses; extra lead-authored tests need a specific uncovered risk. Assign one owner to expensive checks. Follow [execution checks](references/execution-checks.md) for prerequisites, evidence, and required gates. Repeat costly checks only for relevant changes, failures, unresolved concerns, or integration. Record deferred owners and validation carry-forward; never rerun for output or a newer SHA alone.
 
 Integrate worktree outputs serially, inspect each change, and run required combined checks. Update affected docs as verified behavior lands. Follow the requested delivery path; delegation alone does not authorize publish, merge, or deploy. Preserve dirty work and report unresolved worker branches/worktrees. The final answer states the outcome, meaningful validation, and remaining limits; Astra owns it.
 
