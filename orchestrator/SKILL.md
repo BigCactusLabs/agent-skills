@@ -71,7 +71,7 @@ Three yeses → luna @ max, write work included: codemods, rename/import sweeps,
 codex --version && codex login status
 ```
 
-Want `Logged in using ChatGPT` (exit 0); otherwise the **user** runs `codex login`. A version off the footer pin means the notes below are unverified. Confirm astra access with a one-turn `-m gpt-6-astra -s read-only` probe before the first astra dispatch, and likewise `-m gpt-6-sol` before the first sol dispatch (its catalog entry sets `node_repl_auto_review_required`; unprobed under bypass — `REFERENCE.md` watch items).
+Want `Logged in using ChatGPT` (exit 0); otherwise the **user** runs `codex login`. A version off the footer pin means the notes below are unverified. Confirm astra access with a one-turn `-m gpt-6-astra -s read-only` probe before the first astra dispatch, and likewise `-m gpt-6-sol` before the first sol dispatch. Its catalog entry sets `node_repl_auto_review_required`, as astra's does; a read-only probe passed 2026-09-22 with shell and Node REPL calls unprompted, and bypass behavior is still open (`REFERENCE.md` watch items).
 
 Pick the weakest sandbox that works — full bypass is for trusted write work only.
 
