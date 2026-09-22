@@ -2,7 +2,12 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-22
+- orchestrator: rebase ladders on Opus 5.5 and GPT-6 Sol/Luna — Codex luna-6 `max` → sol-6 `high` → astra `low`/`high`/`xhigh`, no GPT-5.6 rung; Claude opus `medium` → `high` with `pr-reviewer-high` as default judge, sonnet `high` for recon (`scout-high`) and docs sync; retire `implementer-opus-low`, `implementer-sonnet-high`, `scout-low`; sync the installed bundle's `references/` and tested `scripts/dispatch.py`; pins codex-cli 0.155.1, claude-code 2.1.280.
+- codex-orchestrator: worker rungs to gpt-6-luna `max` and gpt-6-sol `high` (no GPT-5.6 tier), Claude Opus reviews at `high` for broad/sensitive changes, sol-6 probe note; dated decision in routing history.
+
 ## 2026-09-16
+- codex-orchestrator: prioritize fewer avoidable lead turns and total cost per accepted result; reuse contracts, test harnesses, and evidence tools, with routine tests/docs owned by existing workers and independent lead acceptance.
 - codex-orchestrator: keep the invoking Astra session as sole lead with bounded workers; shorten the entrypoint and sync proportional supervision, risk-based review, compact task records, and dated routing evidence.
 
 ## 2026-09-15

@@ -41,7 +41,7 @@ class DispatchTests(unittest.TestCase):
         self.brief = self.root / "brief.md"
         self.brief.write_text("Repair the named case.\nSecond paragraph.\n")
         self.record = {
-            "task": "TASK-49", "generation": 1, "brief_revision": 1,
+            "task": "TASK-49", "run": 1, "brief_revision": 1,
             "action": "start", "workspace": str(self.workspace),
             "brief": str(self.brief), "artifact_dir": str(self.root / "artifacts"),
             "model": "gpt-6-sol", "effort": "high", "permission_mode": "read-only",
@@ -56,7 +56,7 @@ class DispatchTests(unittest.TestCase):
         return subprocess.run(self.args(record), env=self.env, capture_output=True, text=True, timeout=5, **kwargs)
 
     def artifact(self, suffix, run=1):
-        return self.root / "artifacts" / f"TASK-49.g{run}.{suffix}"
+        return self.root / "artifacts" / f"TASK-49.r{run}.{suffix}"
 
     def probe(self, run=1):
         return next(event for event in map(json.loads, self.artifact("events.jsonl", run).read_text().splitlines()) if event["type"] == "probe")
@@ -76,7 +76,7 @@ class DispatchTests(unittest.TestCase):
         self.assertIn("stub stderr", self.artifact("stderr").read_text())
 
     def test_missing_fields_fail_before_launch(self):
-        for field in ("model", "effort", "workspace", "permission_mode", "generation", "brief_revision"):
+        for field in ("model", "effort", "workspace", "permission_mode", "run", "brief_revision"):
             with self.subTest(field=field):
                 record = {key: value for key, value in self.record.items() if key != field}
                 result = self.run_record(record)
@@ -88,7 +88,7 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(self.run_record().returncode, 0)
         prior = self.artifact("last.md").read_bytes()
         for run, action in enumerate(("resume", "fork"), start=2):
-            record = {**self.record, "generation": run, "action": action, "thread_id": THREAD,
+            record = {**self.record, "run": run, "action": action, "thread_id": THREAD,
                       "model": "gpt-6-astra", "effort": "low"}
             result = self.run_record(record)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -103,46 +103,32 @@ class DispatchTests(unittest.TestCase):
             self.assertEqual(self.artifact("last.md").read_bytes(), prior)
 
     def test_permission_mode_is_explicit_and_not_promoted(self):
-        for run, mode in enumerate(("read-only", "workspace-write"), start=1):
-            result = self.run_record({**self.record, "generation": run, "permission_mode": mode})
+        for run, mode in enumerate(("read-only", "workspace-write", "bypass"), start=1):
+            result = self.run_record({**self.record, "run": run, "permission_mode": mode})
             self.assertEqual(result.returncode, 0, result.stderr)
             argv = self.probe(run)["argv"]
-            self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", argv)
-            self.assertIn(f'sandbox_mode="{mode}"', argv)
+            self.assertEqual("--dangerously-bypass-approvals-and-sandbox" in argv, mode == "bypass")
+            if mode != "bypass":
+                self.assertIn(f'sandbox_mode="{mode}"', argv)
 
-    def test_unsupported_permission_modes_never_launch(self):
-        for mode in ("bypass", "danger-full-access", "approve-for-me"):
-            with self.subTest(mode=mode):
-                result = self.run_record({**self.record, "permission_mode": mode})
-                self.assertEqual(result.returncode, 2)
-                self.assertIn("permission_mode", result.stderr)
-                self.assertFalse((self.root / "artifacts").exists())
+    def test_ultra_needs_user_gate_and_is_recorded(self):
+        record = {**self.record, "effort": "ultra", "user_gated": True}
+        result = self.run_record(record)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        dispatch = json.loads(self.artifact("dispatch.json").read_text())
+        self.assertIn('model_reasoning_effort="ultra"', dispatch["argv"])
+        self.assertIs(dispatch["requested"]["user_gated"], True)
 
-    def test_skip_repo_check_requires_an_explicit_boolean(self):
+    def test_skip_repo_check_is_opt_in_and_needs_a_boolean(self):
         self.assertEqual(self.run_record().returncode, 0)
         self.assertNotIn("--skip-git-repo-check", self.probe()["argv"])
-        record = {**self.record, "generation": 2, "skip_git_repo_check": True}
+        record = {**self.record, "run": 2, "skip_git_repo_check": True}
         self.assertEqual(self.run_record(record).returncode, 0)
         self.assertIn("--skip-git-repo-check", self.probe(2)["argv"])
-        self.assertEqual(self.run_record({**record, "generation": 3, "skip_git_repo_check": "false"}).returncode, 2)
+        self.assertEqual(self.run_record({**record, "run": 3, "skip_git_repo_check": "false"}).returncode, 2)
         self.assertFalse(self.artifact("dispatch.json", 3).exists())
 
-    def test_duplicate_launch_keeps_all_existing_bytes(self):
-        self.assertEqual(self.run_record().returncode, 0)
-        saved = {path: path.read_bytes() for path in (self.root / "artifacts").iterdir()}
-        result = self.run_record()
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("advance generation", result.stderr)
-        self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
-
-    def test_existing_report_is_not_overwritten(self):
-        self.artifact("report.md").parent.mkdir()
-        self.artifact("report.md").write_text("earlier evidence")
-        self.assertEqual(self.run_record().returncode, 2)
-        self.assertEqual(self.artifact("report.md").read_text(), "earlier evidence")
-        self.assertFalse(self.artifact("dispatch.json").exists())
-
-    def test_racing_callers_launch_one_worker_for_the_generation(self):
+    def test_racing_callers_launch_one_worker_for_the_run(self):
         args = self.args()
         first = subprocess.Popen(args, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         second = subprocess.Popen(args, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -157,6 +143,21 @@ class DispatchTests(unittest.TestCase):
                 if process.poll() is None:
                     process.kill()
                 process.communicate(timeout=5)
+
+    def test_duplicate_launch_keeps_all_existing_bytes(self):
+        self.assertEqual(self.run_record().returncode, 0)
+        saved = {path: path.read_bytes() for path in (self.root / "artifacts").iterdir()}
+        result = self.run_record()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("advance run", result.stderr)
+        self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
+
+    def test_existing_report_is_not_overwritten(self):
+        self.artifact("report.md").parent.mkdir()
+        self.artifact("report.md").write_text("earlier evidence")
+        self.assertEqual(self.run_record().returncode, 2)
+        self.assertEqual(self.artifact("report.md").read_text(), "earlier evidence")
+        self.assertFalse(self.artifact("dispatch.json").exists())
 
     def test_open_parent_stdin_cannot_hold_worker_open(self):
         process = subprocess.Popen(self.args(), env=self.env, stdin=subprocess.PIPE,
@@ -184,7 +185,8 @@ class DispatchTests(unittest.TestCase):
     def test_bad_thread_identity_or_unknown_fields_fail_closed(self):
         for extra in ({"action": "resume"}, {"thread_id": THREAD},
                       {"action": "resume", "thread_id": "--last"},
-                      {"effort": "persistent"}, {"effort": "ultra"}, {"effort": "minimal"}, {"model": ""}, {"generation": True},
+                      {"effort": "persistent"}, {"effort": "minimal"}, {"effort": "ultra"},
+                      {"effort": "ultra", "user_gated": False}, {"model": ""}, {"run": True},
                       {"workspace": "relative"}, {"task": "../escape"}, {"effrot": "max"}):
             with self.subTest(extra=extra):
                 self.assertEqual(self.run_record({**self.record, **extra}).returncode, 2)

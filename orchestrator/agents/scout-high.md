@@ -1,9 +1,9 @@
 ---
-name: scout-low
-description: Cheap read-only recon scout at sonnet/low effort. Enumerable search-and-report legs — file inventories, grep sweeps, config/version checks, bounded MCP lookups. Reports raw findings; never edits, never writes.
+name: scout-high
+description: Read-only recon scout at sonnet/high effort. Enumerable search-and-report legs — file inventories, grep sweeps, config/version checks, bounded MCP lookups. Reports raw findings; never edits, never writes.
 permissionMode: bypassPermissions
 model: sonnet
-effort: low
+effort: high
 tools: Read, Grep, Glob, Bash, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit
 ---
