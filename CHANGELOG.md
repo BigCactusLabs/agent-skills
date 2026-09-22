@@ -3,6 +3,7 @@
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
 ## 2026-09-22
+- orchestrator, codex-orchestrator: replace local file paths, project and client names, and session IDs in the evidence notes with generic descriptions.
 - orchestrator: rebase ladders on Opus 5.5 and GPT-6 Sol/Luna — Codex luna-6 `max` → sol-6 `high` → astra `low`/`high`/`xhigh`, no GPT-5.6 rung; Claude opus `medium` → `high` with `pr-reviewer-high` as default judge, sonnet `high` for recon (`scout-high`) and docs sync; retire `implementer-opus-low`, `implementer-sonnet-high`, `scout-low`; sync the installed bundle's `references/` and tested `scripts/dispatch.py`; pins codex-cli 0.155.1, claude-code 2.1.280.
 - codex-orchestrator: worker rungs to gpt-6-luna `max` and gpt-6-sol `high` (no GPT-5.6 tier), Claude Opus reviews at `high` for broad/sensitive changes, sol-6 probe note; dated decision in routing history.
 

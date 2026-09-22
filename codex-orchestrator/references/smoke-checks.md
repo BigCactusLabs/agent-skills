@@ -56,4 +56,4 @@ Use scratch records and existing or synthetic evidence to walk these decisions w
 
 Check frontmatter, local links, and shell syntax for changed examples. A fake CLI validates dispatch plumbing only; it cannot establish real model selection, API delivery, authentication, or worker compliance. Do not claim live coverage unless that case actually ran.
 
-The sandbox-only helper and shell-check example cover local argv/file/process plumbing; the stub probes do not retest native messaging or live model application. Run the relevant live cases above if changing those mechanisms. The 2026-09-11 Proofset adaptation preserved native/Claude lifecycle calls and permission controls.
+The sandbox-only helper and shell-check example cover local argv/file/process plumbing; the stub probes do not retest native messaging or live model application. Run the relevant live cases above if changing those mechanisms. The 2026-09-11 project adaptation preserved native/Claude lifecycle calls and permission controls.
