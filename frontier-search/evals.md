@@ -41,7 +41,7 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 ## E3 — Pure fact-lookup converges in probe
 **Query:** `/frontier-search what is the current stable version of Node.js`
 **Expected behavior:**
-- Resolves in the probe round; outputs `Answer` shape (~150–250 words). One verification round is acceptable only when a probe result contradicts a fresher cited source; a second expand round is a miss.
+- Resolves in the probe round; outputs `Answer` shape. One verification round is acceptable only when a probe result contradicts a fresher cited source; a second expand round is a miss.
 - **No** `*Adapted:*` footer (expand rounds did not exceed the probe).
 - No padding to hit a tier floor; if <3 tiers, a one-line `Tier coverage:` note instead.
 
@@ -66,6 +66,7 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 **Expected behavior:**
 - Synthesis on a many-player topic does not rest on 1-2 documents; each named player maps to at least one direct source.
 - The gap list does not go empty after round 1 on a broad topic — an empty first-round gap list is treated as suspected premature stopping, not completeness.
+- The probe-round gap analysis records a **sufficiency list** (the sources, figures, and stances that must be in hand before Coverage may fire), and the stop is checked against it: any unmet item is named as missing rather than silently dropped. Failure looks like a Coverage stop declared with no list, or a list whose unmet items vanish from the output.
 - Stopping is justified by convergence/coverage criteria, not by the first round "feeling complete"; if budget caps the run, the missing source types are named in Unresolved.
 
 ## E7 — Rank bias / source selection
@@ -74,6 +75,7 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - When a low-ranked primary (official docs, academic PDF, maintainer blog) and a top-ranked content farm both surface, the synthesis cites the primary and drops the farm.
 - The run *uses the mechanism*, not just the principle: `blocked_domains` to exclude known content farms and/or `allowed_domains` to surface lower-ranked primaries (e.g., arxiv, maintainer blogs, official docs) — domain filtering, not post-hoc rejection alone.
 - Source selection is **not** driven by search rank or visual polish; the "Serious" filter governs what gets cited, not the result order.
+- An unfamiliar T4/T5 venue is verified **laterally** (one search for what other sources say about it) as well as against its own archive before it is cited; the trace shows the lateral check, not only a read of the venue's own pages.
 - If only farm-tier sources exist, that thinness is reported — not laundered into confident claims.
 
 ## E8 — `hunt:` calibration / novelty laundering
@@ -99,7 +101,7 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 **Expected behavior:**
 - The background sweep is launched at probe time (start of the run), not after the loop finishes.
 - Synthesis diffs the two tracks: agreements raise confidence and are cited once; sweep-only leads are chased before reporting or, at budget cap, included labeled unverified (never as support for a decision-relevant claim); disagreements are resolved against a primary source or reported as an explicit split with both citations.
-- Sweep-surfaced URLs are fetched/verified before being cited as support — nothing is cited on the sweep's authority alone.
+- Sweep-surfaced URLs are fetched/verified before being cited as support — nothing is cited on the sweep's authority alone. The same holds for sweep-surfaced *figures*: a percentage or count the sweep attributes to a paper is read from the paper before it appears in the output (2026-09-22: a Codex sweep attributed a "48%" recurrence rate to a paper that never states it).
 - The orchestrator's own synthesis remains the spine; the output is not a paste or light rewrite of the sweep's report.
 - **Negative variant:** at `--effort=low`, or with no second-model CLI available, no sweep is attempted and no warning/footer/apology appears — silent skip.
 - **Independence variant:** when the model executing the loop is the same family as the only available sweep CLI (e.g. the skill is running under Codex/GPT and only `codex` is authed), no circular same-model sweep is run — a genuinely different second model is used if one is available, otherwise the sweep is skipped silently.
@@ -170,4 +172,4 @@ The near-misses must look like answers, not absences. A topic where every tier s
 
 ---
 
-**How to use:** Run a fresh agent instance on each query with the skill loaded, compare against `expected_behavior`, and bring failures back to refine SKILL.md. When a real run exposes a new failure mode, add it as a scenario here and, if structural, to the "Common failure modes (self-watch)" list in SKILL.md.
+**How to use:** Run a fresh agent instance on each query with the skill loaded, compare against `expected_behavior`, and bring failures back to refine SKILL.md. When a real run exposes a new failure mode, add it as a scenario here and, if structural, update the relevant rule in SKILL.md or its focused reference.

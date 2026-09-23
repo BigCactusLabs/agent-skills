@@ -18,9 +18,9 @@ You are **not** authorized to edit the skill in this session. Produce findings; 
 
 ## 1. What changed recently — highest-priority regression checks
 
-Fill this table in before handing the runbook over. Each row names one edit, where it lives in SKILL.md, and the eval that exercises it. If a row's eval does not clearly exercise the edit, that is a **FAIL of the upgrade**, not just a skill miss — flag it loudly.
+Fill this table in before handing the runbook over. Each row names one edit, its location, and the eval that exercises it. Older rows retain historical headings and step numbers; use the current routing below. If a row's eval does not clearly exercise the edit, that is a **FAIL of the upgrade**, not just a skill miss — flag it loudly.
 
-| Change | Location in SKILL.md | Eval that targets it | Pass record |
+| Change | Location | Eval that targets it | Pass record |
 |--------|----------------------|----------------------|-------------|
 | 2026-09-02 — step 7 (was 8) became a **draft** fact-check (draft first, then verify claims as written) + benchmark-contamination clause | step 7; loop diagram; checklist | **E17** (primary), E5 | passed 1× (2026-09-02) |
 | 2026-09-02 — stopping check: Convergence → **Coverage plateau** (no new claim-supporting source); new **Overrun** rule (2× planned depth) | step 5; Effort traversal | **E16** (primary), E6, E14 | plateau passed 1×; Overrun not exercised (E16 topic replaced) |
@@ -29,6 +29,13 @@ Fill this table in before handing the runbook over. Each row names one edit, whe
 | 2026-09-02 — evidence sharpened in guardrails (web-DOM injection 33–100%, recall collapse 84→21%, source discernment near chance) | step 4; Rank ≠ authority | E11, E6, E7 | passed 1× |
 | 2026-09-02 — reference refresh (models.md Fable 5.1 lineup; sources.md re-verified; new references/evidence.md) | references/ | E10 (sweep still runs unpinned) | not exercised (Codex quota) |
 | 2026-09-02 (post-eval) — intent-anchor step merged into the guardrail (steps renumbered 3–7); Overrun disambiguated from Budget cap; ledger carries planned depth; no-narration rule made concrete; Tier coverage on fact-lookups; unique sweep output path; benchmark clause covers tables | steps 3–7; Stance; Edge cases; Cross-model triangulation; Budget ledger | E3, E14d, E16, E8, E10 | |
+| 2026-09-22 (self-evaluation run) — evidence ledger re-verified: every "carried" row now sourced, HN AI-share figure corrected (a fifth → ~40–60%), budget-awareness wording fixed, citation band un-spliced, retrieval-concentration figures replaced with the UGC-poisoning paper's; new rows for TELBench, Don't Stop Early, SearchGEO, DRB II v3, Anthropic multi-agent posts | references/evidence.md; Shell and policy; "Serious" filter; Rank ≠ authority; step 4; step 7; Effort budgets; MAINTAINING.md | E5, E17 (figures as written) | |
+| 2026-09-22 — probe records a **sufficiency list**; Coverage stop checks it; Overrun bullet notes that stopping does not repair a retrieval gap | step 2; step 5 | **E6** (new bullet), E16 | |
+| 2026-09-22 — lateral-reading clause in venue discovery | "Serious" filter | **E7** (new bullet) | |
+| 2026-09-22 — runtime facts refreshed (8 backend searches/call, allow/block lists not combinable, cap env var + `/clear` reset, fetch truncation + `curl` fallback) | Runtime facts | E7, E9 | |
+| 2026-09-22 — fan-out evidence cites both sides (noise-floor result + Anthropic 90% gain / swarm scope result / Sept 2026 "more is less" ablation); triangulation warns that sweep figures need primary verification and that GPT backends over-trust forged authority | Subagent dispatch; Cross-model triangulation | E12, **E10** (new bullet) | |
+| 2026-09-22 — compact entrypoint; remove repeated rationale/checklists; route runtime and parallel mechanics into references | SKILL.md: Invariants, Sources, Effort budgets, Research loop, Output; references/runtime.md; references/parallel-research.md | E1–E17; especially E7, E10, E12, E14, E16, E17 | [2026-09-22 orchestrated run](eval-results/2026-09-22-orchestrated.md): 11 pass, 2 fail (E3/E7), 4 partial; 4/4 separate replay checks pass. Full acceptance not met. |
+| 2026-09-22 — targeted fixes: explicit per-query domain filters, Tier coverage in Answer shape, lookup freshness footer exception | SKILL.md: Sources, Output | E3, E7 | [Targeted follow-up](eval-results/2026-09-22-targeted-fixes.md): approved lookup patch applied; E7 pass carried; E3 fails Tier note on Luna, Sol diagnostic misses expansion trigger. Full acceptance unmet; all workers ended. |
 | *(add rows for later edits; delete rows once their eval has passed twice)* | | | |
 
 Previous runs and their full findings live in `eval-results/<date>.md`.
@@ -38,7 +45,7 @@ Previous runs and their full findings live in `eval-results/<date>.md`.
 - Skill instructions: `<skill-dir>/SKILL.md`
 - Eval scenarios (the source of truth for `expected_behavior`): `<skill-dir>/evals.md`
 
-Read both fully before running anything.
+Read both fully before running anything. Follow SKILL.md routing into runtime.md and parallel-research.md when the scenario needs them. Research rationale stays in evidence.md; do not load it into runners.
 
 ## 3. Concretize the placeholder queries (do this before running)
 
@@ -71,7 +78,7 @@ Runner constraints learned 2026-09-02:
 - The E12 fan-out variant and any dispatch-dependent behaviour need a runner with a delegation tool (`general-purpose`); `researcher-opus-med` has none.
 
 Subagent brief template:
-> Read `<skill-dir>/SKILL.md` and execute it as the frontier-search skill on this exact query: `<query>`. Honor any `hunt:`/`--effort` in the query. Produce the full output per the skill's output contract. Then append a short **trace**: which source tiers you cited, which named guardrails/failure-mode checks you actually invoked (quote the rule names from SKILL.md), and any `allowed_domains`/`blocked_domains` you used.
+> Read `<skill-dir>/SKILL.md` and execute it as the frontier-search skill on this exact query: `<query>`. Honor any `hunt:`/`--effort` in the query. Produce the full output per the skill's output contract. Then append a short **trace**: which source tiers you cited, which named guardrails/failure-mode checks you actually invoked (quote the rule names and their file), and any `allowed_domains`/`blocked_domains` you used.
 
 Then **you** (orchestrator = Claude A) score the returned output against that eval's `expected_behavior`. The judge must not be the author of the run.
 

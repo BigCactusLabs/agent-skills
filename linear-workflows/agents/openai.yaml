@@ -1,7 +1,7 @@
 interface:
   display_name: "Linear Workflows"
   short_description: "Use Linear connector tools safely"
-  default_prompt: "Use $linear-workflows to discover the Linear tool surface in this session, read cheaply, respect delegate-vs-assignee, and mutate only when asked."
+  default_prompt: "Use $linear-workflows to inspect Linear context, choose safe connector tools, and avoid broken Linear MCP surfaces."
 
 dependencies:
   tools:
