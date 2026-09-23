@@ -2,10 +2,19 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-23
+- orchestrator: Opus 5.5 prompt audit — the brief rule "on ambiguity, stop and report; never improvise" and the implementer roles' "zero taste decisions" become "inspect unknown values, don't guess", with routine choices left to the worker; dates and the sol probe story moved out of SKILL.md; runtime.md points at the footer's codex-cli pin and the `unittest` command; REFERENCE.md drops the superseded Fable-5.1-lead instructions and the pre-2.1.267 effort conditions.
+- frontier-search: sync the installed skill — compact SKILL.md with operational detail in new `runtime.md`, `parallel-research.md`, and `MAINTAINING.md` references; 2026-09-22 eval results (local run paths shown as `<run-dir>`); `opus` alias now Opus 5.5 in models.md; output shapes without word-count ranges (evals not re-run for that change).
+- linear-workflows: sync the installed skill — tool tables that name the host (Codex app vs Claude), a raw-GraphQL escape hatch (`scripts/linear-gql`, key read from macOS Keychain), updated Codex default prompt, and the connector-drift rule stated without the May 2026 incident.
+- working-with-github: sync the installed skill, adding the `cli-and-api` reference.
+
 ## 2026-09-22
 - orchestrator, codex-orchestrator: replace local file paths, project and client names, and session IDs in the evidence notes with generic descriptions.
 - orchestrator: rebase ladders on Opus 5.5 and GPT-6 Sol/Luna — Codex luna-6 `max` → sol-6 `high` → astra `low`/`high`/`xhigh`, no GPT-5.6 rung; Claude opus `medium` → `high` with `pr-reviewer-high` as default judge, sonnet `high` for recon (`scout-high`) and docs sync; retire `implementer-opus-low`, `implementer-sonnet-high`, `scout-low`; sync the installed bundle's `references/` and tested `scripts/dispatch.py`; pins codex-cli 0.155.1, claude-code 2.1.280.
 - codex-orchestrator: worker rungs to gpt-6-luna `max` and gpt-6-sol `high` (no GPT-5.6 tier), Claude Opus reviews at `high` for broad/sensitive changes, sol-6 probe note; dated decision in routing history.
+
+## 2026-09-19
+- working-with-github: sync the September 19 audit and compact entrypoint, with focused PR/issue, Actions, stack, and agent references plus source evidence.
 
 ## 2026-09-16
 - codex-orchestrator: prioritize fewer avoidable lead turns and total cost per accepted result; reuse contracts, test harnesses, and evidence tools, with routine tests/docs owned by existing workers and independent lead acceptance.

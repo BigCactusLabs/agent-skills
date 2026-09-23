@@ -1,6 +1,6 @@
 # Verified venue appendix
 
-*Every entry verified active 2026-09-02 by fetching the venue's own archive/feed, unless flagged otherwise. This list is disposable calibration data, not an allowlist: a stale entry gets re-verified, not trusted, and the tier table's recognition patterns always outrank it. Loaded on demand from SKILL.md's Source tiers section.*
+*Every entry verified active 2026-09-02 by fetching the venue's own archive/feed, unless flagged otherwise. This list is disposable calibration data, not an allowlist: a stale entry gets re-verified, not trusted, and the tier table's recognition patterns always outrank it. Loaded on demand from SKILL.md's Sources section.*
 
 Flags: **[gated]** paywall or login; **[api-only]** blocks naive page fetches, use its API; **[fetch-blocked]** 403s naive fetches and has no public API — cite from search snippets or a mirror, never from memory; **[stale]** archive has not moved in >12 months; **[unverified]** could not be confirmed this pass.
 

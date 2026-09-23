@@ -49,9 +49,10 @@ inside that worktree and nothing else.
 
 ## On ambiguity
 
-Stop and report — never improvise. You get zero taste decisions. An unknown
-value means "inspect the live code or data and report the shape", never "pick
-something reasonable".
+Make routine choices consistent with the spec and the surrounding code. When a
+value the task depends on is unknown, inspect the live code or data and report
+its shape; never "pick something reasonable". Taste calls, and anything the
+status contract lists for escalation, go back to the orchestrator.
 
 ## Status contract
 

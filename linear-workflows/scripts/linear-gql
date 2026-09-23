@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""Raw Linear GraphQL client.
+
+Fallback for operations the MCP connectors do not expose (label update/delete,
+and anything else that gets curated out). Reads the API key from Keychain.
+
+Usage
+  linear-gql '<query>' ['<json-variables>']     run a read query
+  linear-gql --write '<mutation>' ['<vars>']    run a mutation (flag is required)
+  linear-gql --mutations <substring>            list matching mutation names
+  linear-gql --fields <TypeName>                list input fields of a type
+
+Setup
+  security add-generic-password -s linear-api -a "$USER" -w '<lin_api_...>'
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
+ENDPOINT = "https://api.linear.app/graphql"
+KEYCHAIN_SERVICE = "linear-api"
+
+
+def die(msg, code=1):
+    print(f"linear-gql: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def api_key():
+    key = os.environ.get("LINEAR_API_KEY")
+    if key:
+        return key.strip()
+    try:
+        out = subprocess.run(
+            ["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
+            capture_output=True, text=True, check=True,
+        )
+        return out.stdout.strip()
+    except subprocess.CalledProcessError:
+        die(
+            "no API key. Store one with:\n"
+            f"  security add-generic-password -s {KEYCHAIN_SERVICE} "
+            '-a "$USER" -w \'<lin_api_...>\''
+        )
+
+
+def call(query, variables=None):
+    body = json.dumps({"query": query, "variables": variables or {}}).encode()
+    req = urllib.request.Request(
+        ENDPOINT,
+        data=body,
+        headers={"Authorization": api_key(), "Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            payload = json.load(resp)
+            remaining = resp.headers.get("X-RateLimit-Requests-Remaining")
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")
+        die(f"HTTP {e.code}\n{detail}", 2)
+
+    # A 200 can still carry errors. Report them and fail loudly.
+    if payload.get("errors"):
+        print(json.dumps(payload["errors"], indent=2), file=sys.stderr)
+        if payload.get("data"):
+            print(json.dumps(payload["data"], indent=2))
+        sys.exit(3)
+
+    if remaining and remaining.isdigit() and int(remaining) < 200:
+        print(f"linear-gql: {remaining} requests left this hour", file=sys.stderr)
+    return payload.get("data")
+
+
+def list_mutations(substring):
+    data = call('{ __schema { mutationType { fields { name description } } } }')
+    pattern = substring.lower()
+    for field in data["__schema"]["mutationType"]["fields"]:
+        if pattern in field["name"].lower():
+            desc = (field.get("description") or "").split("\n")[0]
+            print(f"{field['name']}\t{desc}")
+
+
+def list_fields(type_name):
+    data = call(
+        "query($n: String!) { __type(name: $n) { name kind "
+        "inputFields { name type { name kind ofType { name } } } "
+        "fields { name type { name kind ofType { name } } } } }",
+        {"n": type_name},
+    )
+    node = data.get("__type")
+    if not node:
+        die(f"no such type: {type_name}")
+    for field in (node.get("inputFields") or node.get("fields") or []):
+        t = field["type"]
+        label = t.get("name") or (t.get("ofType") or {}).get("name") or t["kind"]
+        print(f"{field['name']}\t{label}")
+
+
+def main(argv):
+    if not argv:
+        die(__doc__, 64)
+
+    if argv[0] == "--mutations":
+        return list_mutations(argv[1] if len(argv) > 1 else "")
+    if argv[0] == "--fields":
+        if len(argv) < 2:
+            die("--fields needs a type name", 64)
+        return list_fields(argv[1])
+
+    write = argv[0] == "--write"
+    if write:
+        argv = argv[1:]
+    if not argv:
+        die("no query given", 64)
+
+    query = argv[0]
+    variables = json.loads(argv[1]) if len(argv) > 1 else {}
+
+    # Shorthand `{ ... }` is query-only per the GraphQL spec, so the keyword is
+    # the only way a mutation can arrive.
+    if re.match(r"\s*mutation\b", query) and not write:
+        die("that looks like a mutation. Re-run with --write to confirm.", 65)
+
+    result = call(query, variables)
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

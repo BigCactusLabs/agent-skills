@@ -19,7 +19,7 @@ Verify, then act. Do not trust a memorised tool list — including this one.
 3. Treat discovery as advertised capability, not proof. Smoke-test an unfamiliar read with a low-limit call first.
 4. A tool that is not surfaced does not exist in this session. Do not guess a name; find another path or say the capability is unavailable.
 
-Prefixes vary by host — `mcp__claude_ai_Linear__<tool>` and `mcp__codex_apps__linear_<tool>` are two seen in the wild. The `<tool>` half is stable; the prefix is not. Expect 50-60 tools per host — enough that wrong-tool selection and schema cost are real risks, so discover progressively instead of loading the whole surface.
+Prefixes: `mcp__claude_ai_Linear__<tool>` (Claude hosts), `mcp__codex_apps__linear_<tool>` (Codex app). The `<tool>` half is stable; the prefix is not. Expect 50-60 tools per host — enough that wrong-tool selection and schema cost are real risks, so discover progressively instead of loading the whole surface.
 
 `https://mcp.linear.app/mcp/readonly` exposes read tools only; `/mcp` is read-write. A `read`-scoped token gives the same guarantee on the standard endpoint.
 
@@ -31,7 +31,7 @@ Oversized reads are the main failure mode. Claude Code warns above 10k tokens of
 - Use the `fields` selector where offered (`list_issues` has one). `id` always returns.
 - Filter server-side: `team`, `project`, `state`, `assignee`, `delegate`, `label`, `cycle`, `release`, `query`, `updatedAt`/`createdAt` (ISO-8601 durations such as `-P7D`).
 - `orderBy: updatedAt` puts the freshest rows first; then stop. Page with `cursor` only when the answer needs it.
-- Use a getter (`get_issue`, `get_project`) for one entity instead of listing and filtering. Getters accept issue identifiers such as `TEAM-123`, not only UUIDs.
+- Use a getter (`get_issue`, `get_project`) for one entity instead of listing and filtering. Getters accept `LIN-123`, not only UUIDs.
 - Use `search_documentation` for "how does feature X work", not workspace reads.
 
 Complexity caps: 3M points/hour on an API key, 2M on OAuth, 10,000 per query. The requests-per-hour figure is **contested** — Linear's rate-limit page says 5,000 in prose and 2,500 for API keys in its table — so trust the `X-RateLimit-*` headers at runtime. Never poll; use webhooks.
@@ -43,13 +43,13 @@ A GraphQL `200` is not success: Linear returns partial data alongside an `errors
 | Area | Tools | Notes |
 |---|---|---|
 | Workspace | `get_workspace`, `list_teams`, `get_team`, `list_users`, `get_user`, `list_cycles` | Start here to resolve names to IDs. |
-| Issues | `list_issues`, `get_issue`, `save_issue`, `list_comments`, `save_comment`, `list_issue_statuses`, `list_issue_labels` | `get_issue` takes opt-in `includeRelations`, `includeCustomerNeeds`, `includeReleases`. |
+| Issues | `list_issues`, `get_issue`, `save_issue`, `list_comments`, `save_comment`, `list_issue_statuses`, `list_issue_labels`, `create_issue_label` | `get_issue` takes opt-in `includeRelations`, `includeCustomerNeeds`, `includeReleases`. Labels are **create-only** — no update, delete or merge tool on any connector. See §3.1. |
 | Projects | `list_projects`, `get_project`, `save_project`, `list_milestones`, `save_milestone`, `list_project_labels` | |
 | Initiatives † | `list_initiatives`, `get_initiative`, `save_initiative`, `list_initiative_labels`, `create_initiative_label` | Proposed/Canceled statuses, priority and labels since 2026-07; teams can lead initiatives since 2026-08. |
 | Status updates | `get_status_updates`, `save_status_update`, `delete_status_update` | Covers projects and initiatives via `type`. `health` is `onTrack`/`atRisk`/`offTrack`. Structured reports, not comments. |
 | Documents | `list_documents`, `get_document`, `save_document` | Parentable to a team, initiative or cycle. |
 | Releases | `list_release_pipelines`, `list_releases`, `get_release`, `save_release`, `list_release_notes`, `get_release_note`, `save_release_note` | Shipped 2026-04, on MCP since 2026-06. `list_issues` takes a `release` filter. |
-| Diffs / code review † | `list_diffs`, `get_diff`, `get_diff_threads`; `save_diff_comment`, `resolve_diff_thread`, `submit_diff_review`, `merge_diff` | Native review since 2026-05, synced to GitHub. Reads are widespread, writes host-dependent. |
+| Diffs / code review † | `list_diffs`, `get_diff`, `get_diff_threads`; `save_diff_comment`, `resolve_diff_thread`, `submit_diff_review`, `merge_diff` | Native review since 2026-05, synced to GitHub. Reads everywhere, writes host-dependent. |
 | Agent skills | `list_agent_skills`, `get_agent_skill` | Read-only, 2026-07. An empty list means none are defined, not a broken tool. |
 | Attachments | `create_attachment`, `get_attachment`, `prepare_attachment_upload`, `extract_images` | |
 | Customers † | `list_customers`, `save_customer`, `delete_customer`, `save_customer_need`, `delete_customer_need` | A customer request is a **`CustomerNeed`**. No `get_customer` or `list_customer_needs` — reach needs through `get_issue` with `includeCustomerNeeds`. |
@@ -58,6 +58,32 @@ A GraphQL `200` is not success: Linear returns partial data alongside an `errors
 † Host-dependent — see §6.
 
 `research` / `linear_research` exists on no connector observed. Prefer structured reads over natural-language research anyway. When a native read is missing, use the closest list tool plus a getter and say which capability is unavailable rather than inferring an answer.
+
+### 3.1 Escape hatch: raw GraphQL
+
+The MCP surface is a curated subset, not a generated wrapper. A missing tool
+usually means the connector dropped it, not that Linear cannot do it. When a
+capability is genuinely absent, `scripts/linear-gql` (beside this file) reaches
+the API directly.
+
+```
+linear-gql '<query>' ['<json-vars>']    read
+linear-gql --write '<mutation>'         write — the flag is required
+linear-gql --mutations <substring>      list live mutation names
+linear-gql --fields <TypeName>          list a type's input fields
+```
+
+- **Introspect before you claim a gap.** `--mutations` and `--fields` report
+  what the API has right now, which beats this file and beats the public docs.
+  Verified 2026-08-14: `issueLabelCreate`, `issueLabelUpdate`,
+  `issueLabelDelete`, `issueLabelRetire`, `issueLabelRestore` all exist, so
+  every label operation is reachable here even though no connector exposes one.
+- **Label merge is still not one call.** No `issueLabelMerge` mutation exists.
+  Linear's UI merges by renaming a label to another's exact name. Reproduce
+  that with `issueLabelUpdate`, or leave it to the user.
+- The key is in macOS Keychain under service `linear-api`.
+- §5 still applies. Mutation rules do not relax because the transport changed —
+  read the target first, state the change, and confirm deletes separately.
 
 ## 4. Agents, delegation and sessions
 
@@ -104,17 +130,17 @@ Send Markdown as literal text with real newlines — no escape sequences.
 
 ## 6. Connectors expose different subsets
 
-Two hosts enumerated on 2026-08-13 advertised 59 and 53 Linear tools. Neither list was a subset of the other — each carried tools the other lacked:
+Enumerated 2026-08-13: the Codex app connector advertised 59 tools, the Claude host 53. Neither is a subset of the other, so "this tool is broken" usually means "this connector does not carry it."
 
-| Present on one host, absent on the other | |
+| Only on the Codex app connector | Only on the Claude host connector |
 |---|---|
 | `search`, `fetch` | `get_workspace` |
 | `list_customers`, `save_customer`, `delete_customer`, `save_customer_need`, `delete_customer_need` | `save_diff_comment`, `delete_diff_comment`, `resolve_diff_thread` |
 | `list_initiatives`, `get_initiative`, `save_initiative`, `list_initiative_labels`, `create_initiative_label` | `submit_diff_review`, `merge_diff` |
 
-So customer and initiative work can be native on one host and entirely missing on another, while submitting or merging a code review goes the other way. "This tool is broken" usually means "this connector does not carry it." Enumerate your own host rather than trusting the split above.
+Customer and initiative work is native on Codex and absent on the Claude host; submitting or merging a review is native on the Claude host and read-only on Codex.
 
-Method, not fact: in May 2026 one connector returned `Tool ... not found` for `list_customers`, `list_initiatives` and `get_status_updates`. All three worked on that same connector three months later. Re-verify any observation older than about 60 days, and never carry a blocklist forward untested. If a read genuinely fails, do not try its matching write — state the limitation and use a fallback.
+Connector surfaces change between releases, and tools that failed on one connector have later started working. Re-verify any observation older than about 60 days, and never carry a blocklist forward untested. If a read genuinely fails, do not try its matching write — state the limitation and use a fallback.
 
 ## 7. Recipes
 
