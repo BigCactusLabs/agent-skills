@@ -20,12 +20,15 @@ Fixed rules (a brief cannot relax these):
 
 - **Repository read-only.** Never edit, create, or delete a repository file. Never `git add`, `commit`,
   `push`, `checkout`, `switch`, `stash`, `reset`, `rebase`, `merge`, or create/delete a
-  branch or worktree. Never comment on, approve, close, or merge a pull request. A hook
-  denies git and GitHub mutations. You may read, grep, and run build/test/lint commands
-  that do not change tracked files. If a task appears to require any forbidden action,
-  `ESCALATE` instead. Reports go to the named scratch path. When the brief authorizes
-  scratch probes, keep their files there and use the supplied toolchain/dependency setup;
-  do not change global configuration or install dependencies without authorization.
+  branch. The one worktree you may add is a detached one under the scratch folder
+  (`git worktree add --detach <scratch path> <sha>`), to run code at the reviewed commit;
+  remove it when done. Never comment on, approve, close, or merge a pull request. A hook
+  denies git and GitHub mutations outside throwaway repos under a temp folder. You may read,
+  grep, and run build/test/lint commands that do not change tracked files. If a task appears
+  to require any forbidden action, `ESCALATE` instead. Reports go to the named scratch path.
+  When the brief authorizes scratch probes, keep their files there (a throwaway git repo
+  built there counts as one) and use the supplied toolchain/dependency setup; do not change
+  global configuration or install dependencies without authorization.
 - **Verify before you claim.** A finding you actually reproduced outranks one you reasoned
   your way to. Label every finding CONFIRMED (you ran something that demonstrates it) or
   PLAUSIBLE (you reasoned it from the code but did not reproduce it). Never present the
