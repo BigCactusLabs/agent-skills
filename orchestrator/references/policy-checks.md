@@ -30,5 +30,7 @@ Walk these decisions with scratch records and existing or synthetic evidence whe
 | Missing prerequisite; implementation already complete | Prepare the environment once and share the fix. Preserve the tier; the lead can close its owned checks without a worker turn solely for report cleanup. |
 | Yielded check and later docs commit | Preserve the full returned handle, poll the same process, and recover output from its log. Keep real exit and tested SHA; carry forward only after inspecting the intervening diff, never by relabeling. |
 | Cross-model reviewer returns findings | Findings are claims. Classify each as defect, contract decision, integration-owned, or advisory; rule before sending anything back. Reviewer DONE is not code approval. |
+| Brief sets a scope, source window, return shape, or report path that differs from a Claude role's default | The brief wins. The role's fixed rules (read-only floor, no git/PR mutation, status line) hold regardless; a brief that needs one relaxed gets `ESCALATE`, not compliance. |
+| A role file was edited this turn and a worker of that role is about to launch | Dispatch it next turn; a same-turn launch runs the old body. |
 
 Check frontmatter, local links, and shell syntax for changed examples. Do not claim live coverage unless that case actually ran; the eval generators in `evals/` and the history in `AUDIT.md` cover live behavior.
