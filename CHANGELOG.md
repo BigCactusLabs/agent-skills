@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-24
+- orchestrator: role latitude pass. Role bodies split fixed rules (read-only floor, no git/PR mutation, status line) from defaults the brief overrides (scope, method, source window, return shape, report path). New roles: `implementer-opus-xhigh`, `docs-sync-sonnet-high`, and `researcher-opus-high`, which is now shipped; the med and high researcher descriptions route differently. Researchers preload frontier-search and may write one report file. Reviewers accept plans, specs, and uncommitted changes. `scout-high` gets an exact-name allowlist of Linear, Google Drive, and Claude Docs read tools. Implementers get an isolation-worktree fallback and a non-git mode. `permissionMode` is dropped (ignored since 2.1.267). The read-only roles reference an optional `role-guard.py` PreToolUse hook that fails open when absent. Report-writing roles say Claude Code's "no report files" subagent note doesn't cover their report. REFERENCE.md now says role edits take effect at the next turn boundary. Two policy-check rows added.
+
 ## 2026-09-23
 - orchestrator: Opus 5.5 prompt audit — the brief rule "on ambiguity, stop and report; never improvise" and the implementer roles' "zero taste decisions" become "inspect unknown values, don't guess", with routine choices left to the worker; dates and the sol probe story moved out of SKILL.md; runtime.md points at the footer's codex-cli pin and the `unittest` command; REFERENCE.md drops the superseded Fable-5.1-lead instructions and the pre-2.1.267 effort conditions.
 - frontier-search: sync the installed skill — compact SKILL.md with operational detail in new `runtime.md`, `parallel-research.md`, and `MAINTAINING.md` references; 2026-09-22 eval results (local run paths shown as `<run-dir>`); `opus` alias now Opus 5.5 in models.md; output shapes without word-count ranges (evals not re-run for that change).

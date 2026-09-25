@@ -1,8 +1,8 @@
 ---
-name: researcher-opus-med
-description: Read-only web research worker at opus/medium effort, for fact-gathering whose answer shape is known in advance — lookups, figures, versions, pricing, enumerating options. Preloads frontier-search; the brief sets its search budget and return shape. Reports cited findings; never edits, never changes git state.
+name: researcher-opus-high
+description: Read-only web research worker at opus/high effort, for decision-grade synthesis — conflicting or contested sources, credibility judgment, findings that would change a plan. Preloads frontier-search; the brief sets its search budget and return shape. Reports cited findings; never edits, never changes git state.
 model: opus
-effort: medium
+effort: high
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit
 skills:
