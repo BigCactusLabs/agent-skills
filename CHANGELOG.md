@@ -2,6 +2,10 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-26
+- orchestrator: Claude reviewers are opus `medium` → `xhigh`. New `pr-reviewer-med` is the default for every review; `pr-reviewer-xhigh` is the retry, or used when the orchestrator judges a review needs more depth; `pr-reviewer-high` is retired. `pr-reviewer-max` stays user-gated.
+- codex-orchestrator: headless Claude reviews run Opus `medium`, with `xhigh` as the retry; no `high` review rung. Also syncs the 2026-09-25 move of the React lane from Opus `high` to `xhigh`.
+
 ## 2026-09-24
 - orchestrator: reviewer roles may add one detached worktree under the scratch folder to run code at the reviewed commit, and may build throwaway git repos there. REFERENCE.md describes the optional role guard after a strictness pass and an adversarial review: what it unwraps, the throwaway-repo and `cd` rules, and replay results.
 - orchestrator: role latitude pass. Role bodies split fixed rules (read-only floor, no git/PR mutation, status line) from defaults the brief overrides (scope, method, source window, return shape, report path). New roles: `implementer-opus-xhigh`, `docs-sync-sonnet-high`, and `researcher-opus-high`, which is now shipped; the med and high researcher descriptions route differently. Researchers preload frontier-search and may write one report file. Reviewers accept plans, specs, and uncommitted changes. `scout-high` gets an exact-name allowlist of Linear, Google Drive, and Claude Docs read tools. Implementers get an isolation-worktree fallback and a non-git mode. `permissionMode` is dropped (ignored since 2.1.267). The read-only roles reference an optional `role-guard.py` PreToolUse hook that fails open when absent. Report-writing roles say Claude Code's "no report files" subagent note doesn't cover their report. REFERENCE.md now says role edits take effect at the next turn boundary. Two policy-check rows added.
