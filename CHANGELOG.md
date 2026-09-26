@@ -4,6 +4,7 @@ One line per change, newest first, prefixed by skill. Details live in each skill
 
 ## 2026-09-26
 - orchestrator: Claude reviewers are opus `medium` → `xhigh`. New `pr-reviewer-med` is the default for every review; `pr-reviewer-xhigh` is the retry, or used when the orchestrator judges a review needs more depth; `pr-reviewer-high` is retired. `pr-reviewer-max` stays user-gated.
+- orchestrator: sync the 2026-09-25 implementer change — `implementer-opus-high` retired; the Claude implementer ladder is opus `medium` → `xhigh`, and `implementer-opus-xhigh` takes the retry and all React / component work.
 - codex-orchestrator: headless Claude reviews run Opus `medium`, with `xhigh` as the retry; no `high` review rung. Also syncs the 2026-09-25 move of the React lane from Opus `high` to `xhigh`.
 
 ## 2026-09-24
