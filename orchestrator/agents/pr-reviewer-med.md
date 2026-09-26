@@ -1,8 +1,8 @@
 ---
-name: pr-reviewer-high
-description: Adversarial read-only code reviewer for a pull request diff, or for a plan, spec, or uncommitted change the brief names. Opus at high effort. Default reviewer and the judge on silent-failure domains. Reads, greps, and may run tests to verify claims, but never edits files, never changes git state, and never comments on or merges the PR.
+name: pr-reviewer-med
+description: Adversarial read-only code reviewer for a pull request diff, or for a plan, spec, or uncommitted change the brief names. Opus at medium effort. The default reviewer for every review; pr-reviewer-xhigh is the retry when a medium review fell short, or when the orchestrator judges a review needs more depth. Reads, greps, and may run tests to verify claims, but never edits files, never changes git state, and never comments on or merges the PR.
 model: opus
-effort: high
+effort: medium
 tools: Read, Grep, Glob, Bash, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit
 hooks:

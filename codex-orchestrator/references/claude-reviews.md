@@ -1,14 +1,13 @@
 # Headless Claude reviews
 
-Claude is authorized for independent reviews, plus one implementation lane: **React and component implementation runs on headless Claude Opus `high`** (user decision 2026-09-11), in its own worktree, with the same brief, verification-ownership, and review rules as a Codex worker, and its diff reviewed by Codex (cross-family). Astra retains scope, findings adjudication, integration, and the user conversation. All other implementation and repairs remain with Codex. A review report does not authorize posting a GitHub review, comment, approval, or any external message.
+Claude is authorized for independent reviews, plus one implementation lane: **React and component implementation runs on headless Claude Opus `xhigh`** (user decisions 2026-09-11 and 2026-09-25), in its own worktree, with the same brief, verification-ownership, and review rules as a Codex worker, and its diff reviewed by Codex (cross-family). Astra retains scope, findings adjudication, integration, and the user conversation. All other implementation and repairs remain with Codex. A review report does not authorize posting a GitHub review, comment, approval, or any external message.
 
 ## Review routing
 
 | Review | Model selection | Effort |
 |---|---|---|
-| Ordinary independent code review | `--model opus` | `high` |
-| React / component implementation (the only Claude implementation lane) | `--model opus` | `high`; one `high` retry on failure, then the Astra lead decides |
-| Broad diff, persistence, concurrency, security, or new shared invariants | `--model opus` | `high`; `xhigh` only after a `high` review fell short on a long-horizon change (user decision 2026-09-22) |
+| Independent code review, including broad diffs, persistence, concurrency, security, or new shared invariants | `--model opus` | `medium`; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung (user decision 2026-09-26) |
+| React / component implementation (the only Claude implementation lane) | `--model opus` | `xhigh`; one `xhigh` retry on failure, then the Astra lead decides |
 | Adversarial, creative review of a complex question or design | `--model claude-fable-5-1` | `medium`; Astra's thought partner |
 | Exceptionally difficult question needing extra creative exploration | `--model claude-fable-5-1` | `high`; super thought partner, used selectively |
 | WebDev or visual-refinement review, or a user-requested maximum-depth review | Explicit Opus or Fable selection | `max`; user-gated |
@@ -31,7 +30,7 @@ Prepare the brief, diff, and output directory first. Use fresh task/generation p
 
 ```bash
 claude -p \
-  --model opus --effort high \
+  --model opus --effort medium \
   --safe-mode --strict-mcp-config \
   --tools 'Read,Grep,Glob' \
   --allowedTools 'Read,Grep,Glob' \
@@ -44,7 +43,7 @@ claude -p \
 
 For the thought-partner option, replace only the model/effort selection with `--model claude-fable-5-1 --effort medium` and supply the conceptual review brief. For the super thought partner, use `--model claude-fable-5-1 --effort high`. Preserve the same tool and permission limits for both.
 
-`--safe-mode` disables discovered customizations while preserving authentication; carry applicable instructions explicitly in the brief. Do not launch the existing `pr-reviewer-high` or `pr-reviewer-xhigh` role files unchanged: both currently set `permissionMode: bypassPermissions`. Their review criteria informed this workflow, but they are not dependencies. The explicit tool list supplies the review boundary without granting Bash. Do not add unrestricted Bash or permission bypass to let the reviewer run tests; bring those requests back to Astra.
+`--safe-mode` disables discovered customizations while preserving authentication; carry applicable instructions explicitly in the brief. Do not launch the existing `pr-reviewer-med` or `pr-reviewer-xhigh` role files unchanged: both currently set `permissionMode: bypassPermissions`. Their review criteria informed this workflow, but they are not dependencies. The explicit tool list supplies the review boundary without granting Bash. Do not add unrestricted Bash or permission bypass to let the reviewer run tests; bring those requests back to Astra.
 
 Use the shell tool's managed process/session handle as the primary completion signal. Astra may do useful independent work, then wait. Do not combine `-p` with `--bg`, append `&`, or confuse the shell session ID with Claude's conversation `session_id`. Track both IDs separately. Preserve the complete yielded tool result, including its managed process handle, instead of printing only `.output`. Poll that handle within active session wait limits (at most 60 seconds by default), preserving stdout/stderr artifacts. Read startup metadata once, then diagnostic logs only for a failure, a missed expected milestone, or a specific decision that needs evidence. Do not read the event stream between routine waits just to confirm activity; a user update needs no diagnostic call. After an inspection establishes normal progress, return to waiting until completion or a meaningful new condition. When a log tail is needed, use the saved log rather than launching another process.
 
