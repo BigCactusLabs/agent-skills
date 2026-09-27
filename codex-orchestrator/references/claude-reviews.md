@@ -6,7 +6,7 @@ Claude is authorized for independent reviews, plus one implementation lane: **Re
 
 | Review | Model selection | Effort |
 |---|---|---|
-| Independent code review, including broad diffs, persistence, concurrency, security, or new shared invariants | `--model opus` | `medium`; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung (user decision 2026-09-26) |
+| Independent code review, including broad diffs, persistence, concurrency, security, or new shared invariants | `--model opus` | `medium`; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung (user decision 2026-09-26, backed by the 2026-09-27 effort-tier eval in the Claude orchestrator skill's `evals/`) |
 | React / component implementation (the only Claude implementation lane) | `--model opus` | `xhigh`; one `xhigh` retry on failure, then the Astra lead decides |
 | Adversarial, creative review of a complex question or design | `--model claude-fable-5-1` | `medium`; Astra's thought partner |
 | Exceptionally difficult question needing extra creative exploration | `--model claude-fable-5-1` | `high`; super thought partner, used selectively |
