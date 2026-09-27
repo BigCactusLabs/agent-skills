@@ -10,6 +10,8 @@ User decision 2026-09-22, after GPT-6 Sol and Luna launched: the worker rungs mo
 
 User decision 2026-09-26, no new benchmark evidence: Claude reviews have two tiers, Opus `medium` for every review (broad and sensitive changes included) and `xhigh` as the retry after a `medium` review fell short or when the lead judges a review needs more depth. Opus `high` is no longer a review effort; the Claude-side `pr-reviewer-high` role was retired the same day for `pr-reviewer-med`.
 
+Measured 2026-09-27 (Claude orchestrator skill, `evals/README.md`): on 8 planted-bug review cases × 2 reps, Opus 5.5 `medium` / `high` / `xhigh` found the bug 7 / 6 / 9 times of 16 (differences within noise), `high` matched `medium` on every recall count at 1.5× the cost, and `medium` → `xhigh` on a short review matched flat `xhigh` recall at lower cost. On 15 implementation cases all three efforts passed 14/15. This is the evidence behind the 2026-09-25 and 2026-09-26 decisions.
+
 Clarification 2026-09-16: this skill is invoked from an existing Astra session, which remains the sole lead. Keep bounded Astra `low` workers; do not create additional orchestrators or ask the user to establish a lead merely to use the skill.
 
 The following claims were moved out of the runtime instructions on 2026-09-16. They were present in the installed skill; their original measurements were not re-audited for this cleanup:

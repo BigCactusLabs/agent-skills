@@ -2,6 +2,11 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-27
+- orchestrator: publish the Opus 5.5 effort-tier eval summary in `orchestrator/evals/` (README, `report.py`, per-run aggregates; fixture code and reports withheld, private-repo cases renamed). Implementers passed 14/15 at `medium`, `high` and `xhigh`; reviewer found-rate differences across efforts are within noise, `high` matches `medium` on recall at 1.5× the cost, and `medium` → `xhigh` matches flat `xhigh` recall at lower cost. REFERENCE.md's Claude-side rungs note cites it; the 2026-09-25 and 2026-09-26 retirements now have evidence.
+- orchestrator: `pr-reviewer-max` description no longer claims max measurably beats lower efforts on WebDev review; that gate rests on the Arena WebDev basis, which the eval did not cover.
+- codex-orchestrator: routing history and the Claude review table cite the 2026-09-27 eval behind the `medium` → `xhigh` review ladder.
+
 ## 2026-09-26
 - orchestrator: Claude reviewers are opus `medium` → `xhigh`. New `pr-reviewer-med` is the default for every review; `pr-reviewer-xhigh` is the retry, or used when the orchestrator judges a review needs more depth; `pr-reviewer-high` is retired. `pr-reviewer-max` stays user-gated.
 - orchestrator: sync the 2026-09-25 implementer change — `implementer-opus-high` retired; the Claude implementer ladder is opus `medium` → `xhigh`, and `implementer-opus-xhigh` takes the retry and all React / component work.
