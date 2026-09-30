@@ -17,9 +17,10 @@ The lead decides and verifies; workers and existing tools handle routine executi
 |---|---|---|
 | Enumerated recon, extraction, version lookups, log analysis | `gpt-6-luna` | `max` |
 | Mechanical edits and docs sync that pass all three checks below | `gpt-6-luna` | `max` |
-| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6-sol` | `high`; `medium` and `max` are not rungs, no GPT-5.6 tier is on the ladder, Terra is off |
+| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6.1-sol` | `high`; `medium` and `max` are not rungs, no GPT-5.6 or GPT-6 Sol tier is on the ladder, Terra is off |
 | React and component implementation (any acceptance check) | Claude Opus via headless CLI | `xhigh`; the one authorized Claude implementation lane, own worktree, Codex reviews the diff |
-| Review-caught implementation (Astra's own review is the acceptance check), terminal-heavy build/test/fix loops, and the retry after Sol `high` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
+| Review-caught implementation outside silent-failure domains (Astra's own review is the acceptance check) | `gpt-6.1-sol` | `xhigh`; the 2026-09-30 A/B matched Astra `low` recall at one-third the cost and three times the wall time (routing-history.md); retry Astra `low` |
+| Terminal-heavy build/test/fix loops, and the retry after Sol `high` or `xhigh` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
 | Independent code review | Claude Opus via headless CLI | `medium`, including broad or sensitive changes; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung |
 | Adversarial, creative review of a complex question or design | Claude Fable 5.1 via headless CLI | `medium`; thought partner to Astra |
 | Exceptionally difficult question needing extra creative exploration | Claude Fable 5.1 via headless CLI | `high`; super thought partner, used selectively |
@@ -37,7 +38,7 @@ An enumerated rename or exact docs sync can go to Luna with mechanical checks. A
 
 Routing is user policy, not a quota claim. Output-token counts do not establish allowance charges. Verify current pricing before recommending changes; user authorization is required. Consult [routing history](references/routing-history.md) only when reassessing policy.
 
-Use full Codex model IDs and explicit effort. Authorized overrides: `gpt-6-luna` `max`, `gpt-6-sol` `high`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `xhigh`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra, move Sol off `high`, substitute older models (the `gpt-5.6-*` tiers included), or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
+Use full Codex model IDs and explicit effort. Authorized overrides: `gpt-6-luna` `max`, `gpt-6.1-sol` `high` or `xhigh`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `xhigh`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra, move Sol off `high`/`xhigh`, substitute older models (the `gpt-5.6-*` tiers and `gpt-6-sol` included), or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
 
 ## Select the execution surface
 

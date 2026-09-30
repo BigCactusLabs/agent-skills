@@ -1,5 +1,7 @@
 # Opus effort-tier evals
 
+Also used for a Codex arm on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `xhigh` vs GPT-6 Astra `low` on the same implementer cases.
+
 Empirical check of the effort ladder used by the Opus 5.5 roles in this repo:
 `implementer-opus-med` (medium) -> `implementer-opus-xhigh` (retry), and
 `pr-reviewer-med` (medium) -> `pr-reviewer-xhigh` (retry) -> `pr-reviewer-max` (user-gated).
@@ -8,7 +10,7 @@ in `results/` are the evidence behind it.
 
 ## What is published
 
-This directory holds the evidence, not the harness: this README, `report.py`, and `results/*.jsonl` stripped to per-run aggregates (cost, wall time, turns, tokens, pass or recall verdict, finding counts, effort verification). Reports, transcripts, diffs, judge evidence and the fixture set stay unpublished because they quote fixture code, and one fixture repo is private; its cases appear as `private-<n>`. The scripts named below are described so the method is reviewable. Regenerate every table with `python3 report.py implement` and `python3 report.py review`.
+This directory holds the evidence, not the harness: this README, `report.py`, and `results/*.jsonl` stripped to per-run aggregates (cost, wall time, turns, tokens, pass or recall verdict, finding counts, effort verification). Reports, transcripts, diffs, judge evidence and the fixture set stay unpublished because they quote fixture code, and one fixture repo is private; its cases appear as `private-<n>`. The scripts named below are described so the method is reviewable. Regenerate every table with `python3 report.py implement` and `python3 report.py review`; the Codex arms with `python3 report_codex.py`.
 
 ## Layout
 
@@ -24,6 +26,8 @@ repo because Claude Code registers any frontmatter `.md` found in a subdirectory
 | `run_eval.py` | Runs a role headlessly at a given effort, verifies the applied effort from the session transcript, grades implementer runs against the hidden tests, saves reviewer reports. Appends to `results/<suite>.jsonl`; resume-safe by `case|effort|rep`. |
 | `grade_review.py` | Judge pass over reviewer rows with `claude-fable-5-1` (a different model from the one under test). Structured output: recall of the planted defect (found / partial / missed) and per-finding validity. |
 | `report.py` | Per-effort tables, per-case paired table, retry-ladder view, change-size and scope-churn columns. |
+| `run_codex_eval.py` | Codex arm: same fixtures, briefs and grader, driven by `codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox --json`; verifies model and effort from the session rollout; halts on a rate-limit error. Appends to `results/codex-implement.jsonl`, keyed `case|model|effort|rep`. |
+| `report_codex.py` | Per-arm table, cost per success, per-case grid for the Codex rows. |
 | `wiring_check.py` | Free oracle/null check of the implementer grader. Run it after touching fixtures or the grader. |
 | `results/` | Raw rows. Every headline in a report is recomputed from these. |
 | `case_dump.md`, `*.log` | Fix/test diffs used to author briefs, and pilot logs. |
@@ -126,3 +130,25 @@ median wall 1.3 / 2.6 / 4.9 min. No scope churn at any level.
 Reviewer, 2 cases: planted defect found 0/2 at medium and high, 1/2 at xhigh and max (the other
 run partial at xhigh and max, missed at medium and high). Mean cost $0.85 / $1.22 / $2.87 / $4.54,
 median wall 3.5 / 5.3 / 11 / 20 min.
+
+## Codex arms: GPT-6.1 Sol xhigh vs GPT-6 Astra low (2026-09-30)
+
+Paired run of the 15 implementer cases, one rep, the same briefs and hidden tests as the Opus
+rows, driven by `codex exec` with approvals and sandbox bypassed in a fresh fixture copy. Model
+and effort are asserted from every session rollout. Cost is OpenAI list price computed from the
+reported usage (output tokens taken to include reasoning); credits follow the Codex rate card
+(6.1 Sol 50 / 2.5 / 250, Astra 250 / 25 / 1,250 per Mtok input / cached / output).
+
+| arm | pass | mean $ | mean credits | cost / success | median wall | median commands | mean output tokens |
+|---|---|---|---|---|---|---|---|
+| gpt-6-astra low | 14/15 | $1.07 | 26.7 | $1.14 | 2.9 min | 12 | 3.7K |
+| gpt-6.1-sol xhigh | 14/15 | $0.32 | 7.9 | $0.34 | 9.0 min | 22 | 10.9K |
+
+Both arms miss the same case (dl-readme-blob), the brief-gap case every Opus 5.5 effort also
+missed; it carries no model signal. Source diffs match per case within a few lines; 6.1 Sol writes
+about 1.5x the test lines and runs about twice the shell commands. The slowest 6.1 Sol run took
+25.6 minutes (62 commands) against Astra's 6.7 minutes on the same case. No run failed, hit a rate
+limit, or raised an approval or auto-review item. Same caveats as above: n = 15 at one rep resolves
+gross gaps and cost ratios, not small recall differences, and hidden-test grading is a machine
+check standing in for review-caught acceptance. 6.1 Sol `high` and `medium` were not measured.
+
