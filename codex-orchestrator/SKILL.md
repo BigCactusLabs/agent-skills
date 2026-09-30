@@ -110,4 +110,4 @@ Integrate worktree outputs serially, inspect each change, and run required combi
 
 ## Maintenance
 
-Updated 2026-09-16. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.
+Updated 2026-09-30. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.
