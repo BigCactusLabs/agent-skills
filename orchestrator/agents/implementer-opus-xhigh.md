@@ -1,7 +1,7 @@
 ---
 name: implementer-opus-xhigh
 description: General implementation worker at opus/xhigh, the retry rung above opus/medium for complex or judgment-adjacent coding tasks, and the first rung for React / component work; in its own git worktree or the non-git paths a brief names. Implements, verifies with the tests named in the brief, commits on its own branch when in git. Never pushes, merges, or deploys.
-model: opus
+model: claude-opus-5-5
 effort: xhigh
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: pr-reviewer-max
 description: Adversarial read-only code reviewer for a pull request diff, or for a plan, spec, or uncommitted change the brief names. Opus at max effort. User-gated — dispatch only with explicit user permission, for WebDev / visual-refinement review, the one surface where max is expected to beat lower efforts (Arena WebDev basis; the local effort-tier eval did not cover WebDev review); elsewhere use pr-reviewer-med (default) or pr-reviewer-xhigh (retry). Reads, greps, and may run tests to verify claims, but never edits files, never changes git state, and never comments on or merges the PR.
-model: opus
+model: claude-opus-5-5
 effort: max
 tools: Read, Grep, Glob, Bash, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit

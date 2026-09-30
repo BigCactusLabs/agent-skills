@@ -1,7 +1,7 @@
 ---
 name: pr-reviewer-xhigh
 description: Adversarial read-only code reviewer for a pull request diff, or for a plan, spec, or uncommitted change the brief names. Opus at xhigh effort. The retry when a pr-reviewer-med review fell short, or when the orchestrator judges a review needs more depth; pr-reviewer-med is the default. Reads, greps, and may run tests to verify claims, but never edits files, never changes git state, and never comments on or merges the PR.
-model: opus
+model: claude-opus-5-5
 effort: xhigh
 tools: Read, Grep, Glob, Bash, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit
