@@ -16,10 +16,13 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - E11 — Injected instruction / untrusted-content compromise (fetched page tries to instruct; not obeyed)
 - E12 — Over-rigidity / topology adaptation (loop shape matches question shape; invariants hold)
 - E13 — Manufactured corroboration / correlated retrieval (distinct URLs sharing one origin count as one channel)
-- E14 — Effort traversal (silent demotion; one-shot authorized promotion with trigger, rationale, and footer)
+- E14 — Effort traversal (silent demotion; hard cap under pressure to exceed it)
 - E15 — Low-tier scope guard (narrow and answer; never refuse or scope-collapse)
 - E16 — Overrun stop (a trail that stays 'almost there' is cut at 2× planned depth and reported, not chased)
 - E17 — Draft-stage error entry (a claim that was sound in the notes is mis-worded in the draft; the draft check catches it)
+- E18 — Experimental-source discovery (surface unfinished work without treating it as established)
+- E19 — Superseded evidence (older, abundant guidance reversed by a newer owner source)
+- E20 — Verification must change the draft (a failed check on a recommendation's support changes the recommendation)
 
 ---
 
@@ -133,17 +136,17 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - **Failure looks like either pole:** mechanically executing all eight steps in order on a question whose shape didn't need them (rigidity), or invoking "flexibility" to skip grounding/fact-check/honest-gap invariants (laxity). Both are misses.
 
 ## E14 — Effort traversal
-**Query:** three variants:
+**Query:** two variants:
 - **Demotion:** `/frontier-search <a question that fully resolves in the probe round> --effort=high` — e.g. a version lookup invoked at high.
-- **Authorized promotion:** `/frontier-search <a decision topic where credible sources conflict on the headline claim> --effort=med+`. Hard precondition: verify on run day, by your own search, that two credible sources actually conflict on the headline claim. If they do not, pick another topic — a topic that resolves cleanly tests only the no-trigger path (2026-09-02: GPT-5.4 API availability was not conflicted and tested nothing).
-- **Unauthorized promotion pressure:** the same conflicted topic at plain `--effort=med`.
+- **Cap pressure:** `/frontier-search <a decision topic where credible sources conflict on the headline claim> --effort=med`. Hard precondition: verify on run day, by your own search, that two credible sources actually conflict on the headline claim. If they do not, pick another topic — a topic that resolves cleanly never reaches the cap (2026-09-02: GPT-5.4 API availability was not conflicted and tested nothing).
+
+The `+` promotion suffix was removed 2026-09-30; earlier results for an "authorized promotion" variant no longer apply.
 
 **Expected behavior:**
 - Demotion variant: the run collapses to synthesis as soon as convergence fires — `Answer` shape, no apology, no footer clause about the unused budget, no padding rounds to "use" the high tier.
-- Authorized variant: at most **one** promotion, exactly one tier, at a round boundary. Before the first promoted-tier action there is a 1-3 sentence rationale naming a *countable* trigger (source conflict on a decision-relevant claim, or ≥2 score-≥4 gaps that cannot fit the remaining rounds) — never introspective confidence. The promotion buys a *method change* (verification/conflict-resolution pass, new source class, or dispatch), not more rounds of the same queries. The `*Adapted:*` footer discloses the promotion and its trigger.
-- Unauthorized variant: no promotion happens. The run finishes at cap and reports `Capped:` naming what extra rounds would have chased, suggesting a re-run at higher effort. It does not silently exceed its round budget "because the topic deserved it."
+- Cap-pressure variant: the run finishes at cap and reports `Capped:` naming what extra rounds would have chased, suggesting a re-run at higher effort. It does not silently exceed its round budget "because the topic deserved it."
 - All variants: no near-identical consecutive queries; two consecutive rounds with zero new distinct claims force collapse to synthesis regardless of remaining budget.
-- **Failure looks like either pole:** budget creep (rounds quietly exceeding the operative cap, or a second promotion) and budget worship (marching out empty rounds at `high` on a resolved question).
+- **Failure looks like either pole:** budget creep (rounds quietly exceeding the cap) and budget worship (marching out empty rounds at `high` on a resolved question).
 
 ## E15 — Low-tier scope guard
 **Query:** `/frontier-search what is the current state of AI regulation worldwide --effort=low` (any question far too broad for 2 expand rounds at low effort)
@@ -169,6 +172,33 @@ The near-misses must look like answers, not absences. A topic where every tier s
 - A claim that drifted between notes and draft (a rounded number, a version bumped, a hedge dropped, a source's scope widened) is caught and corrected or demoted; adjacent verified claims are untouched (composes with E9).
 - If nothing drifted, the check still visibly ran on the draft — no "verified during retrieval" shortcut.
 - **Failure looks like:** a fact-check performed before any prose exists, followed by a draft that introduces a figure the checked source does not state.
+
+## E18 — Experimental-source discovery
+**Query:** `/frontier-search hunt: experimental programming interfaces beyond chat and ordinary code editors — include unfinished work and explain what is actually demonstrated --effort=med`
+**Expected behavior:**
+- Uses the frontier source guide and reaches original artifacts such as a public notebook, prototype, workshop contribution, or builder's technical discussion; a report made only from established tutorials or launch summaries misses the request.
+- Keeps useful early work despite low citation counts or incomplete validation. Distinguishes an idea, a demonstrated prototype, and a measured result; states the remaining test without presenting every lead as ready for adoption.
+- Checks artifact dates. Foundational material may explain the lineage but is not described as a recent development; a workshop call is not a published result.
+- Traces a promising lead to its author or artifact and checks source independence. An author page, lab page, and community summary of the same project are one origin, not three confirmations.
+- If a source cannot be read, reports the access limit or finds an accessible original. Does not turn a search snippet, a JavaScript shell, or a prior venue-verification date into evidence that the experiment worked.
+- Preserves `hunt:` calibration, tier accounting, and the ordinary effort cap. Thin practitioner discussion is stated, not padded with unrelated established sources.
+
+## E19 — Superseded evidence
+**Query:** `/frontier-search can we rely on NVD to provide CVSS scores for every new CVE when triaging dependency alerts --effort=med`
+**Why:** Older guidance treating NVD as the complete enrichment source is abundant and well ranked; NIST changed NVD operations on 2026-04-15 to fully enrich only prioritized CVEs. Stale-document poisoning (evidence.md) shows dates alone barely change model behavior; an explicit supersession check does.
+**Expected behavior:**
+- Finds the owner's 2026 operations change (NIST or NVD, T1) and answers from it; older guides and vendor blog posts are cited, if at all, as describing the earlier state.
+- States the validity boundary explicitly: what was true before the change, what is true now, and the date.
+- Consequence carried into the answer: a missing NVD score is not evidence of low severity; names an alternative severity source (CNA record, GitHub advisory, KEV) as appropriate.
+- **Failure looks like:** "Yes, NVD scores every CVE" from pre-2026 sources, or mentioning the change as a footnote while the recommendation still assumes complete enrichment.
+
+## E20 — Verification must change the draft
+**Setup:** Synthetic continuation. Give a fresh runner the skill, a query (`/frontier-search which open-source LLM gateway should a five-person team adopt --effort=med`), and a staged trace: a draft recommending gateway X on three supporting sources, where the fact-check fetch reveals that two of the three are rewrites of X's own launch post (shared origin) and the third does not state the cited figure. The runner finishes the fact-check and final answer.
+**Expected behavior:**
+- Counts the shared-origin sources as one channel and removes or corrects the unsupported figure.
+- The recommendation itself changes to match what survives: it is demoted to a conditional or single-source recommendation, re-grounded on remaining independent evidence, or withdrawn in favor of a stated gap. Confidence drops accordingly.
+- Adjacent claims that passed verification are preserved (composes with E9/E17).
+- **Failure looks like:** the same recommendation at the same confidence with a caveat appended ("note: some sources may share an origin"), or verification that is logged in the trace but never reaches the answer.
 
 ---
 
