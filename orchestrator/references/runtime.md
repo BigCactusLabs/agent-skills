@@ -15,7 +15,7 @@ After reading the current manifest and brief, write a fresh `<task>.r<run>.run.j
   "workspace": "/absolute/worker-worktree",
   "brief": "/absolute/scratchpad/briefs/TASK-ID.r1.md",
   "artifact_dir": "/absolute/scratchpad/artifacts",
-  "model": "gpt-6-sol",
+  "model": "gpt-6.1-sol",
   "effort": "high",
   "permission_mode": "workspace-write"
 }

@@ -2,6 +2,10 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-09-30
+- orchestrator: GPT-6.1 Sol (`gpt-6.1-sol`, 2026-09-29, sol-6's list price with $0.10 cache reads) replaces `gpt-6-sol` on the Codex ladder: luna-6 `max` → 6.1-sol `high` → 6.1-sol `xhigh` → astra `low` → `high` → `xhigh`. A paired eval on the 15 implementer cases (`orchestrator/evals/`, Codex arms section, `report_codex.py`) had 6.1-sol `xhigh` and astra `low` each pass 14/15 at $0.32 vs $1.07 per run, so review-caught legs now start at 6.1-sol `xhigh` with astra `low` as the retry and the terminal-heavy rung. REFERENCE.md carries the 6.1 Sol pricing, credits, catalog facts (bundled default at `low` since CLI 0.159.1, Luna Reserve, no 6.1 Astra/Luna), and the A/B table; pins move to codex-cli 0.159.2 (`exec` flags unchanged since 0.155.1).
+- codex-orchestrator: same rung swap in SKILL.md, cli-workers, native-agents and the helper fixture; routing history records the 2026-09-30 decision and evidence.
+
 ## 2026-09-27
 - orchestrator: publish the Opus 5.5 effort-tier eval summary in `orchestrator/evals/` (README, `report.py`, per-run aggregates; fixture code and reports withheld, private-repo cases renamed). Implementers passed 14/15 at `medium`, `high` and `xhigh`; reviewer found-rate differences across efforts are within noise, `high` matches `medium` on recall at 1.5× the cost, and `medium` → `xhigh` matches flat `xhigh` recall at lower cost. REFERENCE.md's Claude-side rungs note cites it; the 2026-09-25 and 2026-09-26 retirements now have evidence.
 - orchestrator: `pr-reviewer-max` description no longer claims max measurably beats lower efforts on WebDev review; that gate rests on the Arena WebDev basis, which the eval did not cover.

@@ -15,9 +15,9 @@ codex exec --help
 codex exec resume --help
 ```
 
-The examples below match local `codex-cli 0.154.0` help (checked 2026-09-11; `exec`, `exec resume`, and `exec fork` all accept the helper's flags). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
+The examples below match local `codex-cli 0.159.2` help (checked 2026-09-30, the `exec` flag surface unchanged since 0.155.1; `exec`, `exec resume`, and `exec fork` all accept the helper's flags). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
 
-Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default may be Astra, which must not become an accidental bulk worker. Rungs: `-m gpt-6-luna -c model_reasoning_effort=max`, `-m gpt-6-sol -c model_reasoning_effort=high`, `-m gpt-6-astra -c model_reasoning_effort=low`; Terra and every `gpt-5.6-*` tier are off the ladder, and Sol `medium` is not a rung. Before the first Sol dispatch in a session, run a one-turn `-m gpt-6-sol -s read-only` probe to confirm access. Its catalog entry sets `node_repl_auto_review_required`, as Astra's does; a read-only probe on 2026-09-22 ran shell and Node REPL calls with no approval or review reported. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
+Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default is `gpt-6.1-sol` at `low` since CLI 0.159.1 (Astra before that); neither may become an accidental setting. Rungs: `-m gpt-6-luna -c model_reasoning_effort=max`, `-m gpt-6.1-sol -c model_reasoning_effort=high` (machine-checked) or `xhigh` (review-checked), `-m gpt-6-astra -c model_reasoning_effort=low` (terminal-heavy loops, Sol retry); Terra, `gpt-6-sol` and every `gpt-5.6-*` tier are off the ladder, and Sol `medium` is not a rung. Before the first Sol dispatch in a session, run a one-turn `-m gpt-6.1-sol -s read-only` probe to confirm access. Its catalog entry sets `node_repl_auto_review_required`, as Astra's does; a gpt-6-sol read-only probe on 2026-09-22 ran shell and Node REPL calls with no approval or review reported, and 15 gpt-6.1-sol bypass runs on 2026-09-30 raised no approval or auto-review item without calling the REPL. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
 
 ## Start a worker
 
@@ -34,7 +34,7 @@ Write one fresh task/generation JSON record in authorized scratch space. All fie
   "workspace": "/absolute/worker-worktree",
   "brief": "/absolute/task-scratch/TASK-ID.g1.brief.txt",
   "artifact_dir": "/absolute/task-scratch/artifacts",
-  "model": "gpt-6-sol",
+  "model": "gpt-6.1-sol",
   "effort": "high",
   "permission_mode": "workspace-write"
 }

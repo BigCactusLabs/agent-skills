@@ -44,7 +44,7 @@ class DispatchTests(unittest.TestCase):
             "task": "TASK-49", "run": 1, "brief_revision": 1,
             "action": "start", "workspace": str(self.workspace),
             "brief": str(self.brief), "artifact_dir": str(self.root / "artifacts"),
-            "model": "gpt-6-sol", "effort": "high", "permission_mode": "read-only",
+            "model": "gpt-6.1-sol", "effort": "high", "permission_mode": "read-only",
         }
 
     def args(self, record=None):
