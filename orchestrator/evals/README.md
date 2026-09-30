@@ -1,6 +1,6 @@
 # Opus effort-tier evals
 
-Also used for a Codex arm on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `xhigh` vs GPT-6 Astra `low` on the same implementer cases.
+Also used for Codex arms on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `medium`, `high` and `xhigh` vs GPT-6 Astra `low` on the same implementer cases.
 
 Empirical check of the effort ladder used by the Opus 5.5 roles in this repo:
 `implementer-opus-med` (medium) -> `implementer-opus-xhigh` (retry), and
@@ -131,10 +131,11 @@ Reviewer, 2 cases: planted defect found 0/2 at medium and high, 1/2 at xhigh and
 run partial at xhigh and max, missed at medium and high). Mean cost $0.85 / $1.22 / $2.87 / $4.54,
 median wall 3.5 / 5.3 / 11 / 20 min.
 
-## Codex arms: GPT-6.1 Sol xhigh vs GPT-6 Astra low (2026-09-30)
+## Codex arms: GPT-6.1 Sol medium / high / xhigh vs GPT-6 Astra low (2026-09-30)
 
-Paired run of the 15 implementer cases, one rep, the same briefs and hidden tests as the Opus
-rows, driven by `codex exec` with approvals and sandbox bypassed in a fresh fixture copy. Model
+Four arms over the 15 implementer cases, one rep each, the same briefs and hidden tests as the
+Opus rows, driven by `codex exec` with approvals and sandbox bypassed in a fresh fixture copy
+(`xhigh` and Astra first, `medium` and `high` added the same day). Model
 and effort are asserted from every session rollout. Cost is OpenAI list price computed from the
 reported usage (output tokens taken to include reasoning); credits follow the Codex rate card
 (6.1 Sol 50 / 2.5 / 250, Astra 250 / 25 / 1,250 per Mtok input / cached / output).
@@ -142,13 +143,19 @@ reported usage (output tokens taken to include reasoning); credits follow the Co
 | arm | pass | mean $ | mean credits | cost / success | median wall | median commands | mean output tokens |
 |---|---|---|---|---|---|---|---|
 | gpt-6-astra low | 14/15 | $1.07 | 26.7 | $1.14 | 2.9 min | 12 | 3.7K |
+| gpt-6.1-sol medium | 14/15 | $0.17 | 4.3 | $0.18 | 5.6 min | 15 | 4.5K |
+| gpt-6.1-sol high | 14/15 | $0.27 | 6.7 | $0.29 | 9.2 min | 21 | 7.3K |
 | gpt-6.1-sol xhigh | 14/15 | $0.32 | 7.9 | $0.34 | 9.0 min | 22 | 10.9K |
 
-Both arms miss the same case (dl-readme-blob), the brief-gap case every Opus 5.5 effort also
-missed; it carries no model signal. Source diffs match per case within a few lines; 6.1 Sol writes
-about 1.5x the test lines and runs about twice the shell commands. The slowest 6.1 Sol run took
-25.6 minutes (62 commands) against Astra's 6.7 minutes on the same case. No run failed, hit a rate
-limit, or raised an approval or auto-review item. Same caveats as above: n = 15 at one rep resolves
-gross gaps and cost ratios, not small recall differences, and hidden-test grading is a machine
-check standing in for review-caught acceptance. 6.1 Sol `high` and `medium` were not measured.
+All four arms miss the same case (dl-readme-blob), the brief-gap case every Opus 5.5 effort also
+missed; it carries no model signal, so the suite ranks the arms on cost and wall time only. Source
+diffs match per case within a few lines (344 to 400 lines added per arm); test lines added grow
+with effort (Astra 677, `medium` 826, `high` 968, `xhigh` 1,046), as do shell commands. The slowest
+run per arm, all on the same case: Astra 6.7 min, `medium` 10.0, `high` 15.4, `xhigh` 25.6 (62
+commands). No run failed, hit a rate limit, or raised an approval or auto-review item. Same caveats
+as above: n = 15 at one rep resolves gross gaps and cost ratios, not small recall differences, and
+hidden-test grading is a machine check standing in for review-caught acceptance, so it cannot rank
+`medium` against `xhigh` on review quality. Routing outcome (skill `REFERENCE.md`): machine-caught
+Codex legs start at 6.1 Sol `medium`, review-caught at `xhigh`, `high` is not a rung. 6.1 Sol `low`
+was not measured.
 
