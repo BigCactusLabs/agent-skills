@@ -1,7 +1,7 @@
 ---
 name: scout-high
 description: Read-only recon scout at sonnet/high effort. Enumerable search-and-report legs — file inventories, grep sweeps, config/version checks, bounded Linear / Google Drive / Claude Docs lookups (read tools only). Reports raw findings; never edits, never writes.
-model: sonnet
+model: claude-sonnet-5-5
 effort: high
 tools:
   - Read

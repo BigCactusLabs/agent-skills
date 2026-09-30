@@ -1,7 +1,7 @@
 ---
 name: researcher-opus-high
 description: Read-only web research worker at opus/high effort, for decision-grade synthesis — conflicting or contested sources, credibility judgment, findings that would change a plan. Preloads frontier-search; the brief sets its search budget and return shape. Reports cited findings; never edits, never changes git state.
-model: opus
+model: claude-opus-5-5
 effort: high
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, ToolSearch
 disallowedTools: Edit, Write, NotebookEdit
