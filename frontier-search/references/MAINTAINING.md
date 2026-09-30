@@ -8,4 +8,4 @@ Keep measured research rationale in [evidence.md](evidence.md), not the normal-r
 
 Re-verify runtime claims against current tool documentation, not memory. [runtime.md](runtime.md) holds operational guidance; the evidence ledger records its sources. Raw-page retrieval may be necessary when extraction truncates a document.
 
-[models.md](models.md) and [sources.md](sources.md) are dated snapshots. Confirm model availability before dispatch and venue activity before relying on an entry. The pinned sweep example lives in [parallel-research.md](parallel-research.md); source recognition rules in `SKILL.md` take priority over venue examples.
+The model pins in [parallel-research.md](parallel-research.md) and the source guides ([sources.md](sources.md), [sources-frontier.md](sources-frontier.md), [sources-research.md](sources-research.md)) are dated snapshots. Confirm model availability before dispatch and venue activity before relying on an entry. Source recognition rules in `SKILL.md` take priority over venue examples. Source guides keep only facts specific to each source; general evidence caveats belong in `SKILL.md`.

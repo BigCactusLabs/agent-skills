@@ -1,4 +1,4 @@
-# Frontier-Search Eval Runbook (E1–E17) — Session Handoff
+# Frontier-Search Eval Runbook (E1–E20) — Session Handoff
 
 **How to start a new session with this:** open a fresh Claude Code session and say
 > "Execute the eval runbook at `<skill-dir>/eval-runbook.md`."
@@ -36,6 +36,10 @@ Fill this table in before handing the runbook over. Each row names one edit, its
 | 2026-09-22 — fan-out evidence cites both sides (noise-floor result + Anthropic 90% gain / swarm scope result / Sept 2026 "more is less" ablation); triangulation warns that sweep figures need primary verification and that GPT backends over-trust forged authority | Subagent dispatch; Cross-model triangulation | E12, **E10** (new bullet) | |
 | 2026-09-22 — compact entrypoint; remove repeated rationale/checklists; route runtime and parallel mechanics into references | SKILL.md: Invariants, Sources, Effort budgets, Research loop, Output; references/runtime.md; references/parallel-research.md | E1–E17; especially E7, E10, E12, E14, E16, E17 | [2026-09-22 orchestrated run](eval-results/2026-09-22-orchestrated.md): 11 pass, 2 fail (E3/E7), 4 partial; 4/4 separate replay checks pass. Full acceptance not met. |
 | 2026-09-22 — targeted fixes: explicit per-query domain filters, Tier coverage in Answer shape, lookup freshness footer exception | SKILL.md: Sources, Output | E3, E7 | [Targeted follow-up](eval-results/2026-09-22-targeted-fixes.md): approved lookup patch applied; E7 pass carried; E3 fails Tier note on Luna, Sol diagnostic misses expansion trigger. Full acceptance unmet; all workers ended. |
+| 2026-09-24 — frontier source expansion: notebooks, prototypes, workshops, public research discussions, supporting literature routes; scope access and carried verification dates | SKILL.md: Sources; references/sources*.md | **E18**, E7, E8, E13 | [Source-route checks](eval-results/2026-09-24-source-expansion.md): live retrieval and static checks only; fresh-agent scenarios not run. |
+| 2026-09-24 — second source pass: open AI artifacts, model investigations, live programming, GPU/chip experiments, robotics, and research programs | references/sources-frontier.md | **E18**, E7, E8, E13 | [Follow-up route checks](eval-results/2026-09-24-source-expansion-follow-up.md): 22 additional entries; live source inspection and static validation, no fresh-agent behavior run. |
+| 2026-09-30 — self-upgrade: supersession check (dates ≠ still applies); claim-based sufficiency list and Coverage stop; a failed check must change the draft; one-level fan-out; runtime refresh to 2.1.285 (domain safety check, WebFetch availability); models.md decoupled from other skills; source guides expanded (T2 records, open-access routes, T4/T5 venues) | SKILL.md: Sources, Gaps and expansion, Stopping, Omission check; references/* | **E19**, **E20**, E3, E7 (regression) | [Self-upgrade record](eval-results/2026-09-30-self-upgrade.md) |
+| 2026-09-30 — size cut (SKILL.md 14.0 → 10.6 KB; run-time references 54.9 → 35.9 KB): `+` promotion removed; cost/time column and wall-clock backstop dropped; stop rules merged into one table; models.md folded into parallel-research.md; source guides keep only source-specific notes | SKILL.md (all sections); references/parallel-research.md, runtime.md, sources*.md; models.md deleted | **E14** (promotion variant replaced by cap pressure), E3, E6, E10, E15, E16, E18 | not run; static checks, one pr-reviewer-med pass (accepted with fixes, applied), and a live check of the headless Claude sweep flags |
 | *(add rows for later edits; delete rows once their eval has passed twice)* | | | |
 
 Previous runs and their full findings live in `eval-results/<date>.md`.
@@ -49,7 +53,7 @@ Read both fully before running anything. Follow SKILL.md routing into runtime.md
 
 ## 3. Concretize the placeholder queries (do this before running)
 
-E1, E3, E6, E9, E12, E15 have fixed queries — use them verbatim from evals.md. The rest need a concrete instance filled in:
+E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 uses the staged fixture described in evals.md — use them verbatim from evals.md. The rest need a concrete instance filled in:
 
 | Eval | Placeholder | Suggested concrete query | Note |
 |------|-------------|--------------------------|------|
@@ -63,9 +67,9 @@ E1, E3, E6, E9, E12, E15 have fixed queries — use them verbatim from evals.md.
 | **E13** | `<claim whose coverage is N retellings of one origin>` | *Pick at runtime* — a fresh vendor announcement that aggregators have all rewritten. Confirm the shared origin yourself before scoring. |
 | **E16** | `<many plausible, inconsistent precise figures; no primary>` | *Pick at runtime* — e.g. the GPU count of a named cluster build phase. The near-misses must be competing numbers, not "undisclosed" everywhere; confirm no public primary exists before scoring. |
 | **E17** | draft-stage drift | Reuse the E5 query; score whether the check reads the draft's wording. |
-| **E14** | three variants | Demotion: `/frontier-search what is the current stable version of Node.js --effort=high`. Promotion: a topic where two authoritative sources currently conflict, at `--effort=med+` and again at plain `--effort=med`. | The conflict must be real on the day you run it; verify before scoring. |
+| **E14** | two variants | Demotion: `/frontier-search what is the current stable version of Node.js --effort=high`. Cap pressure: a topic where two authoritative sources currently conflict, at `--effort=med`. | The conflict must be real on the day you run it; verify before scoring. |
 
-Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`) and the `hunt:` prefix (E4, E8, E13).
+Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`, E18 `med`, E19 `med`) and the `hunt:` prefix (E4, E8, E13, E18).
 
 ## 4. Execution method
 
@@ -82,7 +86,7 @@ Subagent brief template:
 
 Then **you** (orchestrator = Claude A) score the returned output against that eval's `expected_behavior`. The judge must not be the author of the run.
 
-You can dispatch several eval subagents in parallel. **Cost warning:** each is a full research run (multiple web searches + fetches); 17 runs at med/high is real token spend. If scoping down, run the regression-critical set first: **E17, E16, E5, E9, E1, E6**, plus whichever evals §1 names.
+You can dispatch several eval subagents in parallel. **Cost warning:** each is a full research run (multiple web searches + fetches); 18 runs at med/high is real token spend. If scoping down, run the regression-critical set first: **E17, E16, E5, E9, E1, E6**, plus whichever evals §1 names.
 
 **Lighter alternative (quick, less rigorous):** run `/frontier-search <query>` yourself one eval at a time and score after each. Faster, but the judge sees its own work — note this weakens the verdict.
 
@@ -102,7 +106,7 @@ Notes: <anything notable — wrong shape, missing tier note, padding, etc.>
 
 While scoring, keep a tally across ALL runs: for each named rule/guardrail/failure-mode in SKILL.md, did *any* eval exercise it? After all runs, output the list of rules that fired in **zero** evals.
 
-**Be honest about the caveat:** 17 scenarios under-sample a large rule set. A zero-fire rule is a candidate to **either** cut **or** write a new eval for — *not* an automatic delete. Classify each zero-fire rule as:
+**Be honest about the caveat:** 18 scenarios under-sample a large rule set. A zero-fire rule is a candidate to **either** cut **or** write a new eval for — *not* an automatic delete. Classify each zero-fire rule as:
 - **Cut candidate** — redundant with another rule, or guards a failure no eval (and plausibly no real run) would trip.
 - **Coverage gap** — a real rule the suite simply doesn't test → propose a new eval instead of cutting.
 
