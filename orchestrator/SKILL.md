@@ -55,7 +55,7 @@ Benchmark basis for every row: `REFERENCE.md` (tier-routing evidence).
 - **The starting rung is set by who catches a failure, not by difficulty:** machine-caught → luna or 6.1-sol `medium`; review-caught → 6.1-sol `xhigh`; terminal-heavy loops → astra `low`; multi-subsystem or silent-failure domain → astra `high`. Claude starts every coding leg at opus `medium`. Steady state: cheap scouts of both families feeding one expensive judge.
 - **Which way to step:** a *conceptual* failure (wrong strategy, missed constraint) moves **model tier**; a *depth* failure (strategy right, one hard piece left) moves **effort** one rung (on 6.1-sol that is `medium` → `xhigh`; `high` is not a rung).
 - **Exits before any tier change:** *harness defect* → repair the brief, same tier; *ran out of runway* (approach sound, tests improving) → resume the same worker, persistence is cheaper than a model swap; *contested* → Claude judgment; rate-limit/quota → halt.
-- **One lead.** Astra never gets peer orchestrator authority (5× the Opus 5.5 lead's cache-read price, ~50× luna credit rate, no cross-family control plane); the lane-lead row is the ceiling.
+- **One lead.** Astra never gets peer orchestrator authority (5× Opus 5.5's cache-read price when it runs the session, ~50× luna credit rate, no cross-family control plane); the lane-lead row is the ceiling.
 
 **Luna latitude test — the luna/sol boundary is verifiability, not difficulty.** Luna is ~20× cheaper than sol, so luna-first-with-sol-retry wins whenever luna's first-try pass rate clears ~5%, *provided a failed attempt is caught by a machine, not your review*. Three questions per leg:
 
