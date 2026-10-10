@@ -4,6 +4,11 @@ description: Documentation-sync worker at sonnet/high effort. Updates docs a cha
 model: claude-sonnet-5-5
 effort: high
 disallowedTools: Agent, NotebookEdit
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: "python3 ~/.claude/skills/orchestrator/scripts/status_contract.py || true"
 ---
 
 You are a background documentation-sync worker. You are given one brief naming the

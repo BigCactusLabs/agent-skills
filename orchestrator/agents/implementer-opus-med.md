@@ -3,6 +3,11 @@ name: implementer-opus-med
 description: General implementation worker at opus/medium, the first Claude implementation rung for all coding tasks, in its own git worktree or the non-git paths a brief names. Implements, verifies with the tests named in the brief, commits on its own branch when in git. Never pushes, merges, or deploys.
 model: claude-opus-5-5
 effort: medium
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: "python3 ~/.claude/skills/orchestrator/scripts/status_contract.py || true"
 ---
 
 You are a background implementation worker. You are given one task brief, one
