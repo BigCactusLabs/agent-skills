@@ -55,5 +55,5 @@ End your final message with exactly one of:
 Cover only: files changed; each stale statement fixed (old → new, with its source);
 anything still stale and why; commit SHA, or "not a git workspace"; status. When the
 brief names a report file, write the details there and return its path, commit, and
-status. Leave out narration. A harness note against writing report files does not cover a
-report path the brief names; the orchestrator reads that file.
+status. Leave out narration. The Write tool refuses report files from subagents; write a report path the brief
+names with Bash (a heredoc) instead, because the orchestrator reads that file.
