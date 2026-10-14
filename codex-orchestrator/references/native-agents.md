@@ -1,6 +1,6 @@
 # Native Codex agents
 
-Use the exposed `collaboration` namespace directly. Do not call collaboration tools through `functions.exec`, and do not substitute Claude's Agent, SendMessage, TaskStop, or TaskOutput tools.
+Use the exposed `collaboration` namespace directly. Do not call collaboration tools through `functions.exec`, and do not substitute Claude's Agent, SendMessage, or TaskStop tools.
 
 The invoking Astra session remains the sole lead. An Astra `low` child is a bounded implementer with `fork_turns: "none"`, never another orchestrator; it cannot delegate or inherit the lead's full assignment.
 

@@ -3,8 +3,10 @@
 Also used for Codex arms on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `medium`, `high` and `xhigh` vs GPT-6 Astra `low` on the same implementer cases.
 
 Empirical check of the effort ladder used by the Opus 5.5 roles in this repo:
-`implementer-opus-med` (medium) -> `implementer-opus-xhigh` (retry), and
-`pr-reviewer-med` (medium) -> `pr-reviewer-xhigh` (retry) -> `pr-reviewer-max` (user-gated).
+`implementer-opus` medium -> xhigh (retry), and
+`pr-reviewer-opus` medium -> xhigh (retry) -> max (user-gated). Until 2026-10-13 each tier was its own
+role file (`implementer-opus-med`, `pr-reviewer-xhigh`, ...), the names in older result rows; since
+Claude Code 2.1.292 the Agent call's `effort` selects the tier.
 The orchestrator docs (`~/.claude/skills/orchestrator/`) record the current tiering; the numbers
 in `results/` are the evidence behind it.
 
@@ -159,3 +161,11 @@ hidden-test grading is a machine check standing in for review-caught acceptance,
 Codex legs start at 6.1 Sol `medium`, review-caught at `xhigh`, `high` is not a rung. 6.1 Sol `low`
 was not measured.
 
+
+## Scout lookup check (2026-09-30, local only)
+
+`scout_lookup_eval.py` runs 8 trivial repo lookups at sonnet `medium` and `high` through headless `claude -p` (Read/Grep/Glob only, exact-match grading). Result in `results/scout-lookup.jsonl`: 24/24 at both efforts, median wall 5.0 s vs 4.7 s, mean cost $0.066 vs $0.063, two turns every run. Not exported to the public repo (fixture names are private).
+
+### Haiku 5.5 (2026-10-11)
+
+Same eight lookups, `MODEL=claude-haiku-5-5 EFFORTS=medium,high,xhigh REPS=3` (the script now takes `MODEL`, `EFFORTS`, `REPS`, `OUT` from the environment). Result in `results/scout-lookup-haiku55.jsonl`: 24/24 at every effort; median wall 7.9 / 7.2 / 7.7 s (Sonnet 5.5: 5.0 s); mean cost $0.048 / $0.026 / $0.029. Every run billed at Haiku's over-100K tier because the headless prefix is ~125K tokens per turn (one run: 250,991 cache-read tokens over two turns), so this is not the sticker price; in-session subagents start at 12–32K. User decision 2026-10-11: no routing change, the Haiku ban stays; evidence in the orchestrator `REFERENCE.md`, "Haiku 5.5 checked".

@@ -79,7 +79,7 @@ Runner constraints learned 2026-09-02:
 - All subagents in one session share the 200-call WebSearch cap. Run at most ~6 evals at a time, or split across sessions; 23 parallel runs starved nine of them mid-loop.
 - Check `codex` quota with a trivial `codex exec` before E10 and any `high`-effort run; an exhausted quota kills every sweep silently.
 - Brief every runner to write its full output to a per-run file in the scratchpad and return only the path. Results over 16K characters are dropped by the message channel.
-- The E12 fan-out variant and any dispatch-dependent behaviour need a runner with a delegation tool (`general-purpose`); `researcher-opus-med` has none.
+- The E12 fan-out variant and any dispatch-dependent behaviour need a runner with a delegation tool (`general-purpose`); `researcher-opus` has none.
 
 Subagent brief template:
 > Read `<skill-dir>/SKILL.md` and execute it as the frontier-search skill on this exact query: `<query>`. Honor any `hunt:`/`--effort` in the query. Produce the full output per the skill's output contract. Then append a short **trace**: which source tiers you cited, which named guardrails/failure-mode checks you actually invoked (quote the rule names and their file), and any `allowed_domains`/`blocked_domains` you used.

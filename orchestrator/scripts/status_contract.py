@@ -6,12 +6,16 @@ import re
 import sys
 
 
-STATUS = re.compile(r"(DONE\b|(BLOCKED|ESCALATE|CHECKPOINT):\s*\S)")
+# An optional "Status:" label is accepted; "**Status:** DONE" reaches here as "Status:** DONE".
+STATUS = re.compile(r"([Ss]tatus:[\s*_`]*)?(DONE\b|(BLOCKED|ESCALATE|CHECKPOINT):\s*\S)")
 DECORATION = " \t*`_>#-"
 REASON = (
     "Your final message must end with exactly one status line: DONE, BLOCKED: <what is missing>, "
-    "ESCALATE: <reason>, or CHECKPOINT: <what remains>. Send your complete final message again "
-    "(everything your role and brief say to return), ending with that line. Do not redo the work."
+    "ESCALATE: <reason>, or CHECKPOINT: <what remains>. If a command, check, or subagent you started is "
+    "still running, or work your brief assigns remains and nothing blocks it, continue now: wait for it in "
+    "the foreground and finish, because ending the turn sends the lead an early report. Otherwise send "
+    "your complete final message again (everything your role and brief say to return), ending with that "
+    "line. Do not redo finished work."
 )
 
 

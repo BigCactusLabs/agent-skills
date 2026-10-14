@@ -24,16 +24,19 @@ class StatusContractTests(unittest.TestCase):
 
     def test_status_lines_pass(self):
         for message in ("Report at /tmp/r.md\nDONE", "path\n\nBLOCKED: no fixture\n", "x\n**ESCALATE: scope**",
-                        "x\n`CHECKPOINT: two files left`", "DONE"):
+                        "x\n`CHECKPOINT: two files left`", "DONE", "x\nStatus: DONE", "x\n**Status:** DONE",
+                        "x\nstatus: BLOCKED: no fixture"):
             with self.subTest(message=message):
                 self.assertEqual(self.stop(message), (0, None))
 
     def test_missing_or_misplaced_status_blocks_once(self):
-        for message in ("All finished.", "DONE\nThen one more remark.", "BLOCKED:", "done", ""):
+        for message in ("All finished.", "DONE\nThen one more remark.", "BLOCKED:", "done", "",
+                        "Waiting for the test run to finish.", "Status: pending", "VERDICT: APPROVE"):
             with self.subTest(message=message):
                 code, output = self.stop(message)
                 self.assertEqual((code, output["decision"]), (0, "block"))
-                self.assertIn("Do not redo the work", output["reason"])
+                self.assertIn("Do not redo finished work", output["reason"])
+                self.assertIn("wait for it in the foreground", output["reason"])
         self.assertEqual(self.stop("All finished.", stop_hook_active=True), (0, None))
 
     def test_absent_field_or_bad_input_fails_open(self):

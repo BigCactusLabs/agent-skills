@@ -24,6 +24,8 @@ not a previous pilot's temporary SDK directory.
 
 Revisit when collecting and routing background results becomes a real bottleneck, or a persistent SDK-controlled Astra session needs automatic updates from reviewers, test runners, or other agents. `ExternalMessage` could supply that input path and reduce custom result-stream handling.
 
+Mid-turn steering of a Codex worker is a second trigger. `codex exec` has none ([CLI workers](cli-workers.md#stop-a-worker)); app-server threads accept `turn/steer`, which the Python SDK `openai-codex` 0.160.0 exposes as `TurnHandle.steer()` / `.interrupt()` (checked 2026-10-03). The bridge pins SDK/CLI 0.154.0, where `steer()` has not been checked. Adopting it would need a steer line in the bridge protocol and a live probe.
+
 ## What it provides
 
 The Python SDK's `ExternalMessage` sends external content through `turn/start.toolOutput`, preserving tool-level authority below user and developer instructions. It starts a turn when idle or joins an active regular turn. Joining handles can independently collect the shared result. Claude remains review-only; Astra owns decisions and integration.

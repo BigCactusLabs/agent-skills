@@ -84,6 +84,12 @@ Astra may authorize named native pairs with verified messaging tools to exchange
 
 Reduce avoidable lead turns first. After useful independent work, use one supported wait path at the longest permitted interval: default waits at most 60 seconds, updates at least every 60 seconds. Avoid short resume loops and extra wrappers. Inspect startup once; diagnose failures, missed milestones, or decisions needing evidence. User updates need no status/log call.
 
+| Surface | Steer | Stop | Turn ended | Record |
+|---|---|---|---|---|
+| Native agent | `send_message` while running; `followup_task` when idle | `interrupt_agent`; the agent stays resident and edits are not rolled back | final-status notification | handle, generation |
+| CLI worker | none mid-turn; stop, then a resume generation | `write_stdin` with `"\u0003"` on the helper's session ([stop a worker](references/cli-workers.md#stop-a-worker)) | session exit, then `turn.completed` and a nonempty `.last.md`; a stop leaves neither | session handle, thread UUID, generation artifacts |
+| Headless Claude | none; `--resume` after the process stops | `write_stdin` with `"\u0003"` (SIGINT ends the turn) | process exit, then a successful result | session handle, Claude `session_id` |
+
 Read focused diffs/ranges to answer a specific question; keep detailed logs on disk and routine results compact. Preserve handles, exits, snapshot identity, and evidence paths. Full reads remain appropriate when needed; avoid repeated unchanged context, not necessary verification. See [execution checks](references/execution-checks.md#focused-evidence-and-bookkeeping).
 
 Before any implementation follow-up, replacement, resume, or material steer, read the actual record/current brief and apply the [resume check](references/briefs-and-repairs.md#task-record-and-resume-check). After compaction, re-read this section too. Under the default policy, the second rejected review requires a user checkpoint before another implementation attempt, and at most three corrective retries follow a task across replacements. [Communication](references/communication.md#repairs-and-replacements) defines covering user decisions and rejection resets. Brief corrections and runtime recovery do not erase repair/rejection counts.
@@ -110,4 +116,4 @@ Integrate worktree outputs serially, inspect each change, and run required combi
 
 ## Maintenance
 
-Updated 2026-09-30. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.
+Updated 2026-10-03. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.
