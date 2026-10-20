@@ -76,7 +76,7 @@ The resumed brief assigns the new generation's detailed report path when the wor
 
 ## Tool and output limits
 
-CLI workers do not automatically inherit session connectors or browser state. Check the required tool before assigning a tool-bound leg. If a lookup requires web access, verify the installed search configuration; do not copy old boolean web-search flags. Carry the user's required HTTP user agent, `OpenAI File Downloader, XaiImageApiFetch/1.0`, into any brief that makes configurable web requests.
+CLI workers do not automatically inherit session connectors or browser state. Check the required tool before assigning a tool-bound leg. If a lookup requires web access, verify the installed search configuration; do not copy old boolean web-search flags.
 
 If the user specifically requests a Codex CLI review, use a read-only `codex exec` brief with the exact snapshot and acceptance contract. This avoids assuming that custom prompts can be combined with scoped `codex review` flags. The default independent reviewer remains Claude.
 
