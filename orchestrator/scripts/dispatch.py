@@ -68,11 +68,14 @@ def prepare(record):
         raise ValueError(f"brief is missing or empty: {brief}")
     paths = {name: str(artifacts / f'{record["task"]}.r{record["run"]}.{suffix}') for name, suffix in (
         ("dispatch", "dispatch.json"), ("report", "report.md"),
-        ("last_message", "last.md"), ("events", "events.jsonl"), ("stderr", "stderr"),
+        ("last_message", "last.md"), ("events", "events.jsonl"), ("stderr", "stderr"), ("steer_log", "steer.log"),
     )}
     for path in paths.values():
         if os.path.lexists(path):
             raise ValueError(f"artifact already exists; advance run: {path}")
+    # Pending-steer file for codex_steer.py; the hooks act only on runs that carry these variables.
+    paths["steer"] = str(artifacts / f'{record["task"]}.r{record["run"]}.steer.md')
+    hook_env = {"ORCH_STEER_FILE": paths["steer"], "ORCH_STATUS_LINE": "0" if "output_schema" in record else "1"}
 
     argv = ["codex", "exec"]
     if record["action"] != "start":
@@ -99,7 +102,7 @@ def prepare(record):
     if record["action"] != "start":
         argv.append(thread)
     argv.append("-")
-    return workspace, brief, artifacts, paths, argv
+    return workspace, brief, artifacts, paths, argv, hook_env
 
 
 def main():
@@ -107,7 +110,7 @@ def main():
     parser.add_argument("record", type=Path, help="JSON run record; see references/runtime.md")
     args = parser.parse_args()
     record = json.loads(args.record.read_text(encoding="utf-8"))
-    workspace, brief, artifacts, paths, argv = prepare(record)
+    workspace, brief, artifacts, paths, argv, hook_env = prepare(record)
     executable = shutil.which("codex")
     if executable is None:
         raise ValueError("codex is not on PATH")
@@ -118,7 +121,7 @@ def main():
             "prepared_at": datetime.now(timezone.utc).isoformat(),
             "record": str(args.record.resolve()), "requested": record,
             "workspace": str(workspace), "brief_sha256": hashlib.sha256(brief.read_bytes()).hexdigest(),
-            "argv": argv, "executable": executable, "pid": os.getpid(), "artifacts": paths,
+            "argv": argv, "executable": executable, "pid": os.getpid(), "artifacts": paths, "hook_env": hook_env,
             "runtime_model": None, "runtime_effort": None,
             "note": "Prepared dispatch only; not completion or acceptance evidence. Runtime settings unknown until observed.",
         }, output, indent=2)
@@ -131,6 +134,7 @@ def main():
         os.dup2(events.fileno(), 1)
         os.dup2(errors.fileno(), 2)
     os.chdir(workspace)
+    os.environ.update(hook_env)
     os.execv(executable, argv)
 
 

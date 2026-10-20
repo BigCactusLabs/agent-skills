@@ -9,7 +9,7 @@ description: Coordinate bounded worker tasks under GPT-6 Astra in Codex. Use for
 
 ## Route the work
 
-Delegate when goal, ownership, and acceptance are clear. Use bounded discovery for missing facts; retain architecture, taste, and disputed decisions with the lead.
+Delegate early once goal, ownership, acceptance, and required tool access are clear. Specify constraints and the result, without doing the worker's investigation first. For an uncertain task, bound discovery to the facts needed for the next decision, then assign implementation. Keep short or tightly coupled work local; retain architecture, taste, and disputed decisions with the lead.
 
 The lead decides and verifies; workers and existing tools handle routine execution. Keep small tasks local; delegate independent legs within session restrictions. Reuse test/bookkeeping machinery; never duplicate worker work or invent activity while waiting. Optimize combined lead-plus-worker cost per accepted result using verified input, cache, and output rates; token volume or lead share alone is insufficient.
 
@@ -17,9 +17,9 @@ The lead decides and verifies; workers and existing tools handle routine executi
 |---|---|---|
 | Enumerated recon, extraction, version lookups, log analysis | `gpt-6-luna` | `max` |
 | Mechanical edits and docs sync that pass all three checks below | `gpt-6-luna` | `max` |
-| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6.1-sol` | `medium`; `high` and `max` are not rungs (the 2026-09-30 four-arm eval had `medium`, `high` and `xhigh` tie on recall, routing-history.md), no GPT-5.6 or GPT-6 Sol tier is on the ladder, Terra is off |
+| Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6.1-sol` | `medium`; `high` and `max` are not rungs |
 | React and component implementation (any acceptance check) | Claude Opus via headless CLI | `xhigh`; the one authorized Claude implementation lane, own worktree, Codex reviews the diff |
-| Review-caught implementation outside silent-failure domains (Astra's own review is the acceptance check) | `gpt-6.1-sol` | `xhigh`; the 2026-09-30 A/B matched Astra `low` recall at one-third the cost and three times the wall time (routing-history.md); retry Astra `low` |
+| Review-caught implementation outside silent-failure domains (Astra's own review is the acceptance check) | `gpt-6.1-sol` | `xhigh`; retry Astra `low` |
 | Terminal-heavy build/test/fix loops, and the retry after Sol `medium` or `xhigh` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
 | Independent code review | Claude Opus via headless CLI | `medium`, including broad or sensitive changes; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung |
 | Adversarial, creative review of a complex question or design | Claude Fable 5.1 via headless CLI | `medium`; thought partner to Astra |
@@ -56,6 +56,8 @@ Count all active workers, including CLI processes, against the available capacit
 
 Before decomposition, state the next usable outcome, acceptance, and deferred work. For interfaces, settle the main user flow and product decisions before splitting frontend/backend work. Use existing context; ask only for material missing decisions. “Keep going” advances the agreed objective, not optional capabilities. Milestones add neither approval gates nor permission to stop before the objective is complete. State the plan before code spanning multiple files or about 20 lines.
 
+Split by dependencies: independent results can run in parallel; a consumer of a changing interface waits for its producer's accepted contract/artifact; unresolved shared invariants stay with one owner. Disjoint files and clean merges do not prove behavioral independence. Give dependent workers the producer's current artifact and revision, then check the combined behavior at integration.
+
 Resolve review policy at intake: the second-rejection checkpoint and three-repair cap are defaults. Explicit user direction, including an applicable user-owned project operating agreement, takes precedence. Record its source and continuation rule before repairs; do not ask again for authority it already supplies. Worker findings cannot grant an exception. Counts diagnose a loop; they never justify accepting a material defect.
 
 Assign each worker an independently acceptable result, exact path ownership, and a check tied to user-visible behavior. Native workers share the filesystem: use exclusive paths for small disjoint edits, and keep the lead out of those paths until completion. Use worktrees for broad changes, overlapping files, branch operations, or risky experiments. Every CLI write worker gets a separate worktree; use the manual setup in [CLI workers](references/cli-workers.md#preflight). Inspect branch, base SHA, and dirty state first. Never stash, reset, or discard user changes to prepare a worker.
@@ -64,11 +66,11 @@ A HEAD-based worktree omits uncommitted changes. If needed, use a repo-supported
 
 Assign one owner or isolate shared resources: Git state, lockfiles, generated files, test databases, ports, and caches. Workers never stage or commit in a shared checkout; isolated local commits need an explicit assignment. External writes and destructive actions stay with the lead under user authorization, including fresh confirmation where required for force-push, `reset --hard`, `rm -rf`, and closing a PR. Worktree/branch cleanup is a separate action. Serialize unresolved shared invariants. If unexpected edits appear in owned paths, stop that write leg and report the conflict; do not overwrite or silently reconcile them.
 
-Keep current milestone status in one authoritative record. The lead decides what is true; an existing worker can apply exact doc edits within owned paths. Change other docs when their instructions or contracts change, not at every checkpoint. Correct misleading docs promptly; make tiny summary edits locally.
+Keep current milestone status in one authoritative record. Assign a docs owner when behavior, interfaces, or workflow changes make instructions stale; those corrections belong in the same change. An existing worker can apply exact edits within owned paths. Other workers return verified replacement facts for shared paragraphs. Avoid unrelated doc rewrites at checkpoints; make tiny summary edits locally.
 
 ## Brief and task state
 
-Use the [worker brief](references/briefs-and-repairs.md#worker-brief): explicit scope, ownership, permissions, acceptance, and verification/report owners, with reachable references to shared contracts and repo rules. Keep settled context in one versioned contract; send repair deltas. Resolve interacting state rules against authoritative schemas before implementation. Do not add a plan reviewer to small enumerated work.
+Use the [worker brief](references/briefs-and-repairs.md#worker-brief): explicit scope, ownership, permissions, acceptance, and verification/report owners, with reachable references to shared contracts and repo rules. Carry known evidence and ruled-out approaches; pass large scout results by artifact path instead of copying them through the lead's context. Keep settled context in one versioned contract; send repair deltas. Resolve interacting state rules against authoritative schemas before implementation. Do not add a plan reviewer to small enumerated work.
 
 For multiple workers, long work, or repairs, keep the [compact task record](references/briefs-and-repairs.md#task-record-and-resume-check). Add conditional recovery detail as needed. Preserve identity, handles, requested versus observed settings, and separate turn/report/acceptance states. Update current fields after dispatch, collection, and adjudication using existing helpers; avoid rewritten narratives or a new coordination framework. Small local tasks need no manifest.
 
@@ -94,7 +96,7 @@ Read focused diffs/ranges to answer a specific question; keep detailed logs on d
 
 Before any implementation follow-up, replacement, resume, or material steer, read the actual record/current brief and apply the [resume check](references/briefs-and-repairs.md#task-record-and-resume-check). After compaction, re-read this section too. Under the default policy, the second rejected review requires a user checkpoint before another implementation attempt, and at most three corrective retries follow a task across replacements. [Communication](references/communication.md#repairs-and-replacements) defines covering user decisions and rejection resets. Brief corrections and runtime recovery do not erase repair/rejection counts.
 
-Verify a completed phase before assigning the next to the same worker. For accepted defects, choose the smallest adequate remedy, batch by invariant, settle expected behavior, and send a decided delta with finding IDs, evidence, related cases, and owned checks. A fix folded into the next phase still counts as a repair. Apply the routing ladder after a failed attempt; missing prerequisites or runtime interruption alone do not justify a tier change. If only a lead-owned check remains, close it locally without a worker turn for report cleanup.
+Verify a completed phase before assigning the next to the same worker. For accepted defects, choose the smallest adequate remedy, batch by invariant, settle expected behavior, and send a decided delta with finding IDs, evidence, related cases, and owned checks. A fix folded into the next phase still counts as a repair. [Classify the failure](references/briefs-and-repairs.md#failure-classification) before applying the routing ladder; brief defects, missing prerequisites, or runtime interruption alone do not justify a tier change. If only a lead-owned check remains, close it locally without a worker turn for report cleanup.
 
 Interrupt wrong scope, unsafe edits, or a poisoned approach; inspect partial work before replacement. Halt an auth/quota/rate-limit lane and report the exact blocker without blind retries or upgrades into the same limit. Apply new user steering, preserving the objective unless cancelled or replaced.
 
@@ -116,4 +118,4 @@ Integrate worktree outputs serially, inspect each change, and run required combi
 
 ## Maintenance
 
-Updated 2026-10-03. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.
+Updated 2026-10-16. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs. For future source syncs, consult [adaptation evidence](references/adaptation-evidence.md) for portable practices, current sources, and deliberate exclusions.

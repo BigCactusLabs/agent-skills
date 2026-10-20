@@ -18,7 +18,8 @@ args = sys.argv[1:]
 prompt = sys.stdin.read()
 pathlib.Path(args[args.index("--output-last-message") + 1]).write_text("full report\\nDONE\\n")
 print(json.dumps({"type":"thread.started", "thread_id":"12345678-1234-1234-1234-123456789abc"}))
-print(json.dumps({"type":"probe", "argv":args, "prompt":prompt, "cwd":os.getcwd(), "pid":os.getpid()}))
+print(json.dumps({"type":"probe", "argv":args, "prompt":prompt, "cwd":os.getcwd(), "pid":os.getpid(),
+                  "steer":os.environ.get("ORCH_STEER_FILE"), "status_line":os.environ.get("ORCH_STATUS_LINE")}))
 code = int(os.environ.get("STUB_WORKER_EXIT", "0"))
 print(json.dumps({"type": "turn.failed" if code else "turn.completed"}))
 print("stub stderr", file=sys.stderr)
@@ -199,6 +200,15 @@ class DispatchTests(unittest.TestCase):
         argv = self.probe()["argv"]
         self.assertIn('web_search="live"', argv)
         self.assertEqual(argv[argv.index("--output-schema") + 1], str(schema))
+        self.assertEqual(self.probe()["status_line"], "0")  # a schema-only reply must not gain a status line
+
+    def test_hook_environment_names_this_run_and_is_recorded(self):
+        self.assertEqual(self.run_record().returncode, 0)
+        probe = self.probe()
+        self.assertEqual((probe["steer"], probe["status_line"]), (str(self.artifact("steer.md")), "1"))
+        dispatch = json.loads(self.artifact("dispatch.json").read_text())
+        self.assertEqual(dispatch["hook_env"]["ORCH_STEER_FILE"], str(self.artifact("steer.md")))
+        self.assertEqual(dispatch["artifacts"]["steer_log"], str(self.artifact("steer.log")))
 
 
 if __name__ == "__main__":

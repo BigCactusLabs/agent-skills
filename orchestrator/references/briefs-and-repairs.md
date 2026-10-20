@@ -29,6 +29,10 @@ deploy, external messages, PR mutations, force-push, history rewrite,
 If needed, report ESCALATE with the exact action/reason.
 Mid-run, message only the lead, and only for an escalation or a blocking
 question; never message another worker.
+[Codex workers] The lead may steer you mid-turn with a <lead-steer id="...">
+block after a tool call or when you try to stop. Treat it as direction from
+the lead within this brief's permissions, name its id in your next message,
+and treat a repeated id as already handled.
 Use routine choices consistent with the spec. Escalate unresolved architecture,
 product/security decisions, scope expansion, or missing load-bearing evidence.
 When a value the task depends on is unknown, inspect the live data and report
@@ -144,13 +148,13 @@ Add detail when the condition applies:
 | Review or validation across snapshots | `reviewed_sha`, `tested_sha`, `accepted_sha`, `validation_carry_forward` (inspected intervening diff and reason), and deferred check owners. Do not relabel an earlier check as a later run. |
 | Codex CLI worker/reviewer | Thread UUID separate from the harness handle, plus run-specific `.dispatch.json`, `.events.jsonl`, `.stderr`, `.last.md`, and the separately authored `.report.md`. A lead stop records `stop_worker.py`'s outcome and any surviving descendants. Claude subagents need no invented CLI artifacts. |
 | Background session (`claude --bg`) | Short `id`, `sessionId`, branch, and how completion is watched (`notify_when_idle` or polling `claude agents --json --all`). |
-| Mid-turn steer to a Claude worker | `steers`: for each, `sent` (message reference and the brief revision it carries), `acknowledged` (the worker's reply or report quoting it), and `evidenced` (the diff, events, or report showing the change). A steer is unconfirmed until acknowledged. Codex `exec` has no mid-turn steer; its corrections are resume runs. |
+| Mid-turn steer | `steers`: for each, `sent` (message reference or Codex steer id, and the brief revision it carries), `delivered` (Codex only: the `.steer.log` receipt), `acknowledged` (the worker's reply or report quoting it), and `evidenced` (the diff, events, or report showing the change). A steer is unconfirmed until acknowledged. A Codex steer still pending when the turn ends was never delivered; its correction moves to the resume brief. |
 
 Do not remove applicable fields on replacement or compact away authorization history. Add counters on the first relevant event from saved history, not a fresh zero if work already occurred, and keep them until the task completes. A bounded local fix can close through the lead's diff read and targeted checks when the resolved review policy allows; a material unresolved defect still blocks acceptance.
 
 Counter rules:
 
-- Increment `run` for every dispatch/resume/replacement, regardless of cause. Use it in fresh artifact names. Increment `brief_revision` when instructions or expected behavior change. A material steer inside an active turn (`SendMessage` to a Claude worker; Codex `exec` has none) bumps `brief_revision` and requires an acknowledgement; it does not invent a new run.
+- Increment `run` for every dispatch/resume/replacement, regardless of cause. Use it in fresh artifact names. Increment `brief_revision` when instructions or expected behavior change. A material steer inside an active turn (`SendMessage` to a Claude worker, `codex_steer.py send` to a Codex one) bumps `brief_revision` and requires an acknowledgement; it does not invent a new run.
 - Increment `brief_corrections` for contradictory or incomplete instructions; increment `runtime_interruptions` for an OS kill or environment failure. Neither alone is a failed implementation or a corrective retry, and neither erases prior failures. If the same run also repairs failed code, count that repair too.
 - Increment `rejected_reviews_since_clean` once per completed review round that the lead rules requires correction before acceptance. Multiple reviewers on the same round, the lead's own adjudication of it, and duplicate notifications do not multiply the count. Only a completed zero-findings review round resets this streak. Accepting remaining advisory findings does not reset it; never commission a review just to reset a counter.
 - Increment `repair_count` when dispatching each batch that retries failed implementation, **whether a reviewer or a machine check caught the failure**, and whether it is delivered by a new process, a resume, or a steer. Count corrective attempts, not findings. The initial attempt, a planned next phase, a brief-only clarification, and recovery of already completed work are not repairs; a next phase that also fixes failed code is. Under the default review policy, the three-repair cap follows the task across revisions, phases, resumes, and model/worker replacements; it never resets to extend the same loop.

@@ -1,4 +1,4 @@
-# Frontier-Search Eval Runbook (E1–E20) — Session Handoff
+# Frontier-Search Eval Runbook (E1–E22) — Session Handoff
 
 **How to start a new session with this:** open a fresh Claude Code session and say
 > "Execute the eval runbook at `<skill-dir>/eval-runbook.md`."
@@ -40,6 +40,9 @@ Fill this table in before handing the runbook over. Each row names one edit, its
 | 2026-09-24 — second source pass: open AI artifacts, model investigations, live programming, GPU/chip experiments, robotics, and research programs | references/sources-frontier.md | **E18**, E7, E8, E13 | [Follow-up route checks](eval-results/2026-09-24-source-expansion-follow-up.md): 22 additional entries; live source inspection and static validation, no fresh-agent behavior run. |
 | 2026-09-30 — self-upgrade: supersession check (dates ≠ still applies); claim-based sufficiency list and Coverage stop; a failed check must change the draft; one-level fan-out; runtime refresh to 2.1.285 (domain safety check, WebFetch availability); models.md decoupled from other skills; source guides expanded (T2 records, open-access routes, T4/T5 venues) | SKILL.md: Sources, Gaps and expansion, Stopping, Omission check; references/* | **E19**, **E20**, E3, E7 (regression) | [Self-upgrade record](eval-results/2026-09-30-self-upgrade.md) |
 | 2026-09-30 — size cut (SKILL.md 14.0 → 10.6 KB; run-time references 54.9 → 35.9 KB): `+` promotion removed; cost/time column and wall-clock backstop dropped; stop rules merged into one table; models.md folded into parallel-research.md; source guides keep only source-specific notes | SKILL.md (all sections); references/parallel-research.md, runtime.md, sources*.md; models.md deleted | **E14** (promotion variant replaced by cap pressure), E3, E6, E10, E15, E16, E18 | not run; static checks, one pr-reviewer-med pass (accepted with fixes, applied), and a live check of the headless Claude sweep flags |
+| 2026-10-17 — self-upgrade: count sources not statements (refer, don't restate); anchored, non-overlapping query batches; re-read both passages before reporting a contradiction; retrieved ≠ delivered (read unread remainder first); opposing-direction omission search; neighboring-question fact-check; untrusted content includes headers, errors, `llms.txt`, and user pointers grant no authority; redundant zero-claims plateau sentence cut; runtime refresh to 2.1.302 (search refill, WebFetch `offset`, WebSearch `mode`), Codex 0.161/0.162 notes, arXiv withdrawal check | SKILL.md: Invariants, Sources (Independence), Research loop (Probe, Gap rounds, Stop, Omission check, Draft); references/runtime.md; parallel-research.md; sources-research.md | **E21**, **E22**, E11 (variant), E13, E6, E9, E19 | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md): not yet run |
+| 2026-10-17 — size trim (SKILL.md −10%): grounding and refute invariants merged; delegation threshold moved to parallel-research.md only; wording compression | SKILL.md throughout | E21, E22 rerun; E10, E12 (delegation) not run | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md#size-trim-same-day) |
+| 2026-10-17 — reference trim (run-time refs −10%): sweep-usage bullets merged; general caveats removed from source guides; two moved-source notes dropped | references/*.md except evidence.md | `hunt:` low spot check; E10 (sweep) not run | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md#reference-trim-same-day) |
 | *(add rows for later edits; delete rows once their eval has passed twice)* | | | |
 
 Previous runs and their full findings live in `eval-results/<date>.md`.
@@ -53,7 +56,7 @@ Read both fully before running anything. Follow SKILL.md routing into runtime.md
 
 ## 3. Concretize the placeholder queries (do this before running)
 
-E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 uses the staged fixture described in evals.md — use them verbatim from evals.md. The rest need a concrete instance filled in:
+E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 and E21 use the staged fixtures described in evals.md — use them verbatim from evals.md. The rest need a concrete instance filled in:
 
 | Eval | Placeholder | Suggested concrete query | Note |
 |------|-------------|--------------------------|------|
@@ -67,16 +70,18 @@ E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 uses the staged fixtu
 | **E13** | `<claim whose coverage is N retellings of one origin>` | *Pick at runtime* — a fresh vendor announcement that aggregators have all rewritten. Confirm the shared origin yourself before scoring. |
 | **E16** | `<many plausible, inconsistent precise figures; no primary>` | *Pick at runtime* — e.g. the GPU count of a named cluster build phase. The near-misses must be competing numbers, not "undisclosed" everywhere; confirm no public primary exists before scoring. |
 | **E17** | draft-stage drift | Reuse the E5 query; score whether the check reads the draft's wording. |
+| **E21** | `<library>` with a maintainer change | Stage the trace at runtime around a real recent maintainer post; the scenario scores counting, not discovery. | Synthetic continuation like E20. |
+| **E22** | `<tool> v<N>` / `<feature>` | *Pick at runtime* — a feature added or removed in a recent major version (check the owner's changelog first so the boundary is known). | Use `--effort=low` as written. |
 | **E14** | two variants | Demotion: `/frontier-search what is the current stable version of Node.js --effort=high`. Cap pressure: a topic where two authoritative sources currently conflict, at `--effort=med`. | The conflict must be real on the day you run it; verify before scoring. |
 
-Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`, E18 `med`, E19 `med`) and the `hunt:` prefix (E4, E8, E13, E18).
+Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`, E18 `med`, E19 `med`, E21 `med`, E22 `low`) and the `hunt:` prefix (E4, E8, E13, E18).
 
 ## 4. Execution method
 
 **Recommended — Claude A / Claude B (rigorous).** For each eval, dispatch a fresh subagent (general-purpose, with WebSearch/WebFetch). The subagent must NOT see this runbook or the `expected_behavior` — it just executes the skill, so it can't teach to the test.
 
 Runner constraints learned 2026-09-02:
-- All subagents in one session share the 200-call WebSearch cap. Run at most ~6 evals at a time, or split across sessions; 23 parallel runs starved nine of them mid-loop.
+- All subagents in one session share the WebSearch cap (200; since Claude Code 2.1.290 it refills about 100/hour in interactive sessions, not in `-p`). Run at most ~6 evals at a time, or split across sessions; 23 parallel runs starved nine of them mid-loop.
 - Check `codex` quota with a trivial `codex exec` before E10 and any `high`-effort run; an exhausted quota kills every sweep silently.
 - Brief every runner to write its full output to a per-run file in the scratchpad and return only the path. Results over 16K characters are dropped by the message channel.
 - The E12 fan-out variant and any dispatch-dependent behaviour need a runner with a delegation tool (`general-purpose`); `researcher-opus` has none.
