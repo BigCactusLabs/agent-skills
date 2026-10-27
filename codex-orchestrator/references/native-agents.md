@@ -36,7 +36,7 @@ Check capabilities at both ends. A parent can have `collaboration` tools while i
 | `followup_task({target, message})` | Give an existing worker a new phase or repair task; starts it if idle. Delivers to it if running. |
 | `interrupt_agent({target})` | Stop current work promptly. The agent remains available. This does not roll back edits. |
 | `list_agents({})` | Inspect status or find a management handle when needed; avoid repeated polling. |
-| `wait_agent({timeout_ms: 60000})` | Wait for mailbox/new-input activity when local work is exhausted. It is not a query for every agent's terminal state. |
+| `wait_agent({timeout_ms: 60000})` | Wait for mailbox/new-input activity when local work is exhausted. It is not a query for every agent's terminal state. From 0.164.0 a pending injection, including one queued before the wait started, ends the wait early ([PR #55644](https://github.com/openai/codex/pull/55644)): an early return is a delivery to read, not a timeout. |
 
 `send_message` is not an idle-worker resume. Use `followup_task` after completion. Both continue the same handle and its recorded configuration; do not invent model/effort arguments on a follow-up or add a CLI process just to re-pin them. Neither tool changes a worker's model in this schema: a Luna-to-Sol or Sol-to-Astra escalation requires a new spawn, seeded with the result and failure evidence. Preserve the old worker's artifacts and account for live capacity before replacing it. Apply the [resume check](briefs-and-repairs.md#task-record-and-resume-check) before implementation steering or a new attempt; a fresh handle cannot reset repair counts or a user checkpoint.
 
@@ -58,7 +58,7 @@ The default independent reviewer remains restricted headless Claude. This sectio
 
 ## Permission and configuration checks
 
-Native workers inherit the parent's sandbox and live approval overrides. A read-only brief constrains behavior; it does not create a read-only sandbox. If fresh approval cannot be shown, the blocked action fails back to the parent. Do not treat delegation as permission escalation.
+Native workers inherit the parent's sandbox and live approval overrides. A read-only brief constrains behavior; it does not create a read-only sandbox. Inheritance of configured thread environments is a separate, off-by-default feature in 0.164.0 (`subagent_thread_environments`, listed "under development"; [PR #55375](https://github.com/openai/codex/pull/55375)); do not assume a worker sees an environment the lead configured unless that feature is on and checked. If fresh approval cannot be shown, the blocked action fails back to the parent. Do not treat delegation as permission escalation.
 
 If a future harness supports named custom agents, inspect the selected role: its model and effort settings can override explicit spawn values. This session's schema exposes no role-selection parameter; do not invent one.
 

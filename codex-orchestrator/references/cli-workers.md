@@ -4,7 +4,7 @@ Use only when native delegation is unavailable or a separate CLI process is need
 
 ## Preflight
 
-Every CLI write worker needs its own manually prepared worktree (`git worktree add -b <task> <path>`), with a verified base and required inputs. The 2026-09-11 probe of Codex 0.154.0's native `--worktree` was not adopted: detached HEAD, resume ran in the invoking cwd, and `resume --worktree` was refused. This dated probe is not a claim about later versions; preserve explicit workspace control unless a new probe supports a change.
+Every CLI write worker needs its own manually prepared worktree (`git worktree add -b <task> <path>`), with a verified base and required inputs. The 2026-09-11 probe of Codex 0.154.0's native `--worktree` was not adopted: detached HEAD, resume ran in the invoking cwd, and `resume --worktree` was refused. This dated probe is not a claim about later versions; preserve explicit workspace control unless a new probe supports a change. Codex 0.164.0 retired the `worktrees` feature flag ([PR #54175](https://github.com/openai/codex/pull/54175)), but `exec --worktree` still refuses `resume` (and `review`, `--ephemeral`, `--ignore-user-config`), so a resumed worker would lose its worktree; the manual worktree stays (checked 2026-10-26, not re-probed live).
 
 Read local help once before the first CLI dispatch:
 
@@ -15,7 +15,7 @@ codex exec --help
 codex exec resume --help
 ```
 
-The examples below match local `codex-cli 0.160.0` help (checked 2026-10-03; `exec`, `exec resume`, and `exec fork` all accept the helper's flags). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
+The examples below match local `codex-cli 0.164.0` help (checked 2026-10-26; `exec`, `exec resume`, and `exec fork` all accept the helper's flags; `--cd` and `-s` exist on `exec` only, which is why the helper sets `sandbox_mode` through `-c`). They were syntax-checked, not validated by a live CLI worker job. Recheck flags when the version differs. If auth is absent, report it; login is a user action. Do not print credential files.
 
 Pin `-m` and `-c model_reasoning_effort` on every dispatch and resume. The installed default is `gpt-6.1-sol` at `low` since CLI 0.159.1 (Astra before that); neither may become an accidental setting. Rungs: `-m gpt-6-luna -c model_reasoning_effort=max`, `-m gpt-6.1-sol -c model_reasoning_effort=medium` (machine-checked) or `xhigh` (review-checked), `-m gpt-6-astra -c model_reasoning_effort=low` (terminal-heavy loops, Sol retry); Terra, `gpt-6-sol` and every `gpt-5.6-*` tier are off the ladder, and Sol `high` is not a rung (2026-09-30 eval: same recall as `medium` at 1.6× the cost). Before the first Sol dispatch in a session, run a one-turn `-m gpt-6.1-sol -s read-only` probe to confirm access. Its catalog entry sets `node_repl_auto_review_required`, as Astra's does; a gpt-6-sol read-only probe on 2026-09-22 ran shell and Node REPL calls with no approval or review reported, and 45 gpt-6.1-sol bypass runs on 2026-09-30 (`medium`, `high`, `xhigh`) raised no approval or auto-review item without calling the REPL. Use `-s read-only` for inspection or `-s workspace-write` for an authorized isolated write task. Do not use permission-bypass flags, ignore user rules, or widen writable roots to work around a denied action. Route any required escalation through the parent session's approval mechanism.
 

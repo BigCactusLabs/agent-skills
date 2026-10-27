@@ -16,6 +16,8 @@ Decided 2026-09-30, on a paired eval (`~/.claude/agents/evals/README.md`, Codex 
 
 Decided 2026-09-30, later the same day, after the user asked for 6.1 Sol `high` and `medium` arms on the same suite: all four arms (Astra `low`, 6.1 Sol `medium`, `high`, `xhigh`) passed 14/15 with the same brief-gap miss, at mean list cost $1.07 / $0.17 / $0.27 / $0.32 (26.7 / 4.3 / 6.7 / 7.9 credits) and median wall 2.9 / 5.6 / 9.2 / 9.0 min. Machine-checked legs therefore start at 6.1 Sol `medium`; `high` is not a rung (same recall at 1.6× `medium`'s cost and wall time, no measured advantage over `xhigh`); review-checked legs stay at `xhigh` as the depth rung, because hidden-test grading cannot separate the arms on review quality; Astra `low` remains the retry after `xhigh` and the terminal-heavy rung. Ladder: Luna `max` → Sol `medium` → Sol `xhigh` → Astra `low`. Not measured: Sol `low`, a second rep, review-caught quality of `medium` against `xhigh`.
 
+User decision 2026-10-26 ("dont want terra in"): GPT-6.1 Terra stays off the ladder with the rest of the Terra family; no A/B was run.
+
 Clarification 2026-09-16: this skill is invoked from an existing Astra session, which remains the sole lead. Keep bounded Astra `low` workers; do not create additional orchestrators or ask the user to establish a lead merely to use the skill.
 
 The following claims were moved out of the runtime instructions on 2026-09-16. They were present in the installed skill; their original measurements were not re-audited for this cleanup:

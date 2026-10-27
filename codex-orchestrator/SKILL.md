@@ -38,7 +38,7 @@ An enumerated rename or exact docs sync can go to Luna with mechanical checks. A
 
 Routing is user policy, not a quota claim. Output-token counts do not establish allowance charges. Verify current pricing before recommending changes; user authorization is required. Consult [routing history](references/routing-history.md) only when reassessing policy.
 
-Use full Codex model IDs and explicit effort. Authorized overrides: `gpt-6-luna` `max`, `gpt-6.1-sol` `medium` or `xhigh`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `xhigh`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra, move Sol off `medium`/`xhigh`, substitute older models (the `gpt-5.6-*` tiers and `gpt-6-sol` included), or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
+Use full Codex model IDs and explicit effort. Authorized overrides: `gpt-6-luna` `max`, `gpt-6.1-sol` `medium` or `xhigh`, and `gpt-6-astra` at `low` with `fork_turns: "none"`. Claude implements only React/components at Opus `xhigh`; its other lanes are reviews. Never inherit the lead's settings for workers, dispatch Terra (GPT-6.1 Terra included), move Sol off `medium`/`xhigh`, substitute older models (the `gpt-5.6-*` tiers and `gpt-6-sol` included), or use `ultra`/`persistent`. Above-`low` Astra workers, separate Astra judges, and other external implementation need specific user direction. Report unavailable models; the existing lead re-scopes or does the work.
 
 ## Select the execution surface
 
@@ -118,4 +118,4 @@ Integrate worktree outputs serially, inspect each change, and run required combi
 
 ## Maintenance
 
-Updated 2026-10-16. Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs. For future source syncs, consult [adaptation evidence](references/adaptation-evidence.md) for portable practices, current sources, and deliberate exclusions.
+Updated 2026-10-26 (codex-cli 0.164.0, Claude Code 2.1.311). Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs. For future source syncs, consult [adaptation evidence](references/adaptation-evidence.md) for portable practices, current sources, and deliberate exclusions.
