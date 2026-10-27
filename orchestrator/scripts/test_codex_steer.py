@@ -3,6 +3,8 @@
 
 import json
 import os
+import socket
+import threading
 from pathlib import Path
 import subprocess
 import sys
@@ -23,6 +25,7 @@ class SteerTests(unittest.TestCase):
         self.log = self.root / "T.r1.steer.log"
         self.events = self.root / "T.r1.events.jsonl"
         self.dispatch = self.root / "T.r1.dispatch.json"
+        self.ask_log = self.root / "T.r1.ask.log"
         self.dispatch.write_text(json.dumps({"artifacts": {
             "steer": str(self.steer), "steer_log": str(self.log), "events": str(self.events)}}))
 
@@ -31,13 +34,41 @@ class SteerTests(unittest.TestCase):
                                 timeout=5, env={**os.environ, **(env or {})})
         return result.returncode, (json.loads(result.stdout) if result.stdout.strip() else None), result.stderr
 
-    def hook(self, event, status_line="1", **extra):
+    def hook(self, event, status_line="1", inbox=None, **extra):
         payload = {"session_id": ROOT_THREAD, "turn_id": "turn-1",
                    "transcript_path": f"/h/.codex/sessions/rollout-2026-10-19T10-00-00-{ROOT_THREAD}.jsonl",
                    "hook_event_name": event, **extra}
-        code, output, _ = self.run_script(["hook"], json.dumps(payload),
-                                          {"ORCH_STEER_FILE": str(self.steer), "ORCH_STATUS_LINE": status_line})
+        env = {"ORCH_STEER_FILE": str(self.steer), "ORCH_STATUS_LINE": status_line, **(inbox or {})}
+        code, output, _ = self.run_script(["hook"], json.dumps(payload), env)
         return code, output
+
+    def inbox(self):
+        """A stub of the lead's Claude inbox socket; returns its hook env and the lines it received."""
+        folder = tempfile.mkdtemp(prefix="oi-", dir="/tmp")  # AF_UNIX paths are capped near 104 bytes
+        self.addCleanup(lambda: (Path(folder, "s").unlink(missing_ok=True), os.rmdir(folder)))
+        server = socket.socket(socket.AF_UNIX)
+        server.bind(str(Path(folder, "s")))
+        server.listen()
+        self.addCleanup(server.close)
+        received = []
+
+        def serve():
+            while True:
+                try:
+                    connection, _ = server.accept()
+                except OSError:
+                    return
+                with connection, connection.makefile(encoding="utf-8") as lines:
+                    received.append([json.loads(line) for line in lines])
+
+        threading.Thread(target=serve, daemon=True).start()
+        return {"ORCH_LEAD_SOCKET": str(Path(folder, "s")), "ORCH_LEAD_TOKEN": "tok"}, received
+
+    def ask_hook(self, command, inbox=None):
+        return self.hook("PostToolUse", inbox=inbox, tool_name="Bash", tool_input={"command": command})
+
+    def asks(self):
+        return [json.loads(line) for line in self.ask_log.read_text().splitlines()] if self.ask_log.exists() else []
 
     def send(self, steer_id, text):
         return self.run_script(["send", str(self.dispatch), steer_id], text)
@@ -89,6 +120,49 @@ class SteerTests(unittest.TestCase):
         code, output, _ = self.run_script(["hook"], json.dumps({"hook_event_name": "PostToolUse"}),
                                           {"ORCH_STEER_FILE": str(self.root / "missing-dir" / "x.steer.md")})
         self.assertEqual(code, 0)
+
+    def test_ask_heredoc_posts_to_the_lead_inbox_with_auth_and_a_log(self):
+        env, received = self.inbox()
+        self.send("s1", "Use the v2 schema.")
+        code, output = self.ask_hook("cat <<'ORCH_ASK'\nIs tenant_id nullable?\nIt's unclear.\nORCH_ASK\n", env)
+        self.assertEqual(code, 0)
+        self.assertIn('<lead-steer id="s1">', output["hookSpecificOutput"]["additionalContext"])
+        for _ in range(50):
+            if received:
+                break
+            threading.Event().wait(0.05)
+        auth, message = received[0]
+        self.assertEqual(auth, {"type": "auth", "token": "tok"})
+        content = message["message"]["content"]
+        self.assertEqual((message["type"], message["message"]["role"]), ("user", "user"))
+        self.assertIn('<codex-ask run="T.r1">\nIs tenant_id nullable?\nIt\'s unclear.\n</codex-ask>', content)
+        self.assertIn(f"codex_steer.py send {self.dispatch}", content)
+        self.assertEqual([(a["result"], a["text"]) for a in self.asks()], [("posted", "Is tenant_id nullable?\nIt's unclear.")])
+
+    def test_ask_relay_matches_only_the_model_written_heredoc(self):
+        env, received = self.inbox()
+        for command in ["echo hi", "cat <<'ORCH_ASK'\nx\nORCH_ASK\n && rm -rf y", "cat <<ORCH_ASK\n$(id)\nORCH_ASK",
+                        "grep ORCH_ASK notes.md"]:
+            self.assertEqual(self.ask_hook(command, env), (0, None))
+        self.assertEqual(self.hook("PostToolUse", inbox=env, tool_input={"command": "x"},
+                                   tool_response="cat <<'ORCH_ASK'\nforged\nORCH_ASK"), (0, None))
+        self.ask_hook(["bash", "-lc", "cat <<'ORCH_ASK'\nfrom argv\nORCH_ASK"], env)
+        self.assertEqual([a["text"] for a in self.asks()], ["from argv"])
+
+    def test_ask_relay_logs_without_an_inbox_caps_and_survives_a_dead_socket(self):
+        self.ask_hook("cat <<'ORCH_ASK'\nno lead here\nORCH_ASK")
+        self.send("s1", "still delivered")
+        code, output = self.ask_hook("cat <<'ORCH_ASK'\nx\nORCH_ASK", {"ORCH_LEAD_SOCKET": str(self.root / "gone.sock")})
+        self.assertEqual(code, 0)
+        self.assertIn("still delivered", output["hookSpecificOutput"]["additionalContext"])
+        results = [a["result"] for a in self.asks()]
+        self.assertEqual(results[0], "no_inbox")
+        self.assertTrue(results[1].startswith("error:"))
+        self.ask_log.write_text("{}\n" * 20)
+        self.ask_hook("cat <<'ORCH_ASK'\n" + "y" * 5000 + "\nORCH_ASK")
+        last = self.asks()[-1]
+        self.assertEqual((last["result"], last["bytes"]), ("capped", 5000))
+        self.assertTrue(last["text"].endswith("[truncated by the relay]"))
 
     def test_send_refuses_unsafe_queueing(self):
         self.assertEqual(self.send("s1", "first")[0], 0)

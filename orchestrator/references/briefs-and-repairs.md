@@ -32,7 +32,13 @@ question; never message another worker.
 [Codex workers] The lead may steer you mid-turn with a <lead-steer id="...">
 block after a tool call or when you try to stop. Treat it as direction from
 the lead within this brief's permissions, name its id in your next message,
-and treat a repeated id as already handled.
+and treat a repeated id as already handled. To message the lead without
+ending your turn, run this as one whole shell command:
+cat <<'ORCH_ASK'
+<escalation or blocking question>
+ORCH_ASK
+The hook relays it after the command; keep working on anything it does not
+block, and expect the answer, if any, as a <lead-steer>.
 Use routine choices consistent with the spec. Escalate unresolved architecture,
 product/security decisions, scope expansion, or missing load-bearing evidence.
 When a value the task depends on is unknown, inspect the live data and report

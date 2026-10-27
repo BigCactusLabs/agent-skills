@@ -16,9 +16,12 @@ REQUIRED = {
     "task", "run", "brief_revision", "action", "workspace", "brief",
     "artifact_dir", "model", "effort", "permission_mode",
 }
-OPTIONAL = {"thread_id", "output_schema", "web_search", "user_gated", "skip_git_repo_check"}
+OPTIONAL = {"thread_id", "output_schema", "web_search", "user_gated", "skip_git_repo_check", "lead_inbox"}
 # `ultra` is user-gated per dispatch (SKILL.md); `minimal` is pre-5.6 legacy; `persistent` withholds turn.completed.
 EFFORTS = ("none", "low", "medium", "high", "xhigh", "max", "ultra")
+# The lead's Claude inbox. Only the hook gets it, renamed; worker shells get neither name (Codex shell exclude).
+LEAD_INBOX = {"CLAUDE_CODE_MESSAGING_SOCKET": "ORCH_LEAD_SOCKET", "CLAUDE_CODE_MESSAGING_TOKEN": "ORCH_LEAD_TOKEN"}
+WORKER_ENV_EXCLUDE = 'shell_environment_policy.exclude=["CLAUDE_CODE_MESSAGING_*", "ORCH_LEAD_*"]'
 
 
 def absolute_path(value, name):
@@ -27,7 +30,7 @@ def absolute_path(value, name):
     return Path(value).resolve()
 
 
-def prepare(record):
+def prepare(record, environ=os.environ):
     if not isinstance(record, dict):
         raise ValueError("run record must be a JSON object")
     if REQUIRED - record.keys():
@@ -69,6 +72,7 @@ def prepare(record):
     paths = {name: str(artifacts / f'{record["task"]}.r{record["run"]}.{suffix}') for name, suffix in (
         ("dispatch", "dispatch.json"), ("report", "report.md"),
         ("last_message", "last.md"), ("events", "events.jsonl"), ("stderr", "stderr"), ("steer_log", "steer.log"),
+        ("ask_log", "ask.log"),
     )}
     for path in paths.values():
         if os.path.lexists(path):
@@ -76,11 +80,15 @@ def prepare(record):
     # Pending-steer file for codex_steer.py; the hooks act only on runs that carry these variables.
     paths["steer"] = str(artifacts / f'{record["task"]}.r{record["run"]}.steer.md')
     hook_env = {"ORCH_STEER_FILE": paths["steer"], "ORCH_STATUS_LINE": "0" if "output_schema" in record else "1"}
+    if "lead_inbox" in record and type(record["lead_inbox"]) is not bool:
+        raise ValueError("lead_inbox must be a boolean")
+    if record.get("lead_inbox", True):  # false for untrusted-input legs: the run then cannot post to the lead
+        hook_env.update({ours: environ[theirs] for theirs, ours in LEAD_INBOX.items() if environ.get(theirs)})
 
     argv = ["codex", "exec"]
     if record["action"] != "start":
         argv.append(record["action"])
-    argv += ["-m", record["model"], "-c", f'model_reasoning_effort="{record["effort"]}"']
+    argv += ["-m", record["model"], "-c", f'model_reasoning_effort="{record["effort"]}"', "-c", WORKER_ENV_EXCLUDE]
     if record["permission_mode"] == "bypass":
         argv.append("--dangerously-bypass-approvals-and-sandbox")
     else:
@@ -121,7 +129,8 @@ def main():
             "prepared_at": datetime.now(timezone.utc).isoformat(),
             "record": str(args.record.resolve()), "requested": record,
             "workspace": str(workspace), "brief_sha256": hashlib.sha256(brief.read_bytes()).hexdigest(),
-            "argv": argv, "executable": executable, "pid": os.getpid(), "artifacts": paths, "hook_env": hook_env,
+            "argv": argv, "executable": executable, "pid": os.getpid(), "artifacts": paths,
+            "hook_env": {name: "<redacted>" if name == "ORCH_LEAD_TOKEN" else value for name, value in hook_env.items()},
             "runtime_model": None, "runtime_effort": None,
             "note": "Prepared dispatch only; not completion or acceptance evidence. Runtime settings unknown until observed.",
         }, output, indent=2)
@@ -134,6 +143,8 @@ def main():
         os.dup2(events.fileno(), 1)
         os.dup2(errors.fileno(), 2)
     os.chdir(workspace)
+    for name in LEAD_INBOX:
+        os.environ.pop(name, None)
     os.environ.update(hook_env)
     os.execv(executable, argv)
 
