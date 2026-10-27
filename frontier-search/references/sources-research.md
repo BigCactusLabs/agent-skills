@@ -30,6 +30,7 @@ Expansion path: **one useful paper → cited predecessors → newer citing work 
 |---|---|
 | [OSF Registries](https://help.osf.io/article/330-welcome-to-registrations) | Study plans, registration dates, amendments; compare timing with reported outcomes. The [Projects transition](https://help.osf.io/article/759-details-of-osf-projects-transition) doesn't affect Registrations or Preprints. |
 | [MLCommons / MLPerf](https://mlcommons.org/benchmarks/) | Benchmark rules and results. Keep version, workload, hardware, software, division; reviewed, provisional, unverified results differ. |
+| [Exa ATLAS](https://exa.ai/blog/atlas-benchmark) | Agentic web-search benchmark, preview 2026-10-08, built and ranked by the vendor. Tasks, gold tables and grader unreleased as of 2026-10-26 (none in [exa-labs/benchmarks](https://github.com/exa-labs/benchmarks)): figures are vendor-reported until they ship. |
 | [Jepsen](https://jepsen.io/analyses) | Distributed-system failure tests, valid for the tested version and fault model; "no bug found" is not correctness. See [methods](https://jepsen.io/services/analysis) and [funding context](https://jepsen.io/analyses/ethics). |
 | [Hamel Husain](https://hamel.dev/) | Applied-AI evaluation, error analysis; practitioner with consulting and teaching interests. |
 

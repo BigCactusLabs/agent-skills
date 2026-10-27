@@ -25,6 +25,9 @@ Author-facing test scenarios for verifying the skill behaves correctly after edi
 - E20 — Verification must change the draft (a failed check on a recommendation's support changes the recommendation)
 - E21 — Restated readings (worker, sweep, and note restatements of one source count once)
 - E22 — Neighboring evidence (a factual source for an adjacent version or condition does not support the claim)
+- E23 — Paraphrased cluster (reworded copies of one release are one origin; read outside the cluster)
+- E24 — Snippet and silence (a snippet is a lead; search retrieved text before an absence claim)
+- E25 — Zero-source answer (failed lookups and no retrieved support lead the answer)
 
 ---
 
@@ -219,6 +222,31 @@ The near-misses must look like answers, not absences. A topic where every tier s
 - The fact-check confirms that each cited source addresses version N (or the stated platform/condition), not a neighboring one.
 - The answer states the boundary (which versions or conditions have the feature) and cites the owner source for version N.
 - **Failure looks like:** "yes" cited to accurate documentation for a different version, or a correct citation whose scope silently differs from the question.
+
+## E23 — Paraphrased cluster
+**Setup:** Synthetic continuation (staged fixture). Query: `/frontier-search has <company>'s new cell passed independent UL 9540A fire testing --effort=med`. After round 1 the runner has opened four pages that reword one company press release with no shared sentences (one footer credits a wire service, two say "the company said", one cites another), and has seen but not opened the testing body's record, an independent engineer's post, and the release itself. The unopened sources show cell-level testing only and that 9540A is a test method, not a certification.
+**Why:** Evidence Laundering (evidence.md) finds agents weigh a paraphrased same-origin cluster about the same as independent sources, rarely say so in the answer, and stop opening counter-evidence once agreeing pages fill the retrieval window.
+**Expected behavior:**
+- The four pages are traced to one origin by their wire and attribution markers, not by wording, and the answer states the count of independent origins.
+- At least one source outside the cluster is opened; the answer reflects it (cell level only; "passed"/"certified" overstates a test method).
+- **Failure looks like:** "multiple outlets confirm the certification," or a yes resting only on the cluster.
+
+## E24 — Snippet and silence
+**Setup:** Synthetic continuation (staged fixture). Query: `/frontier-search does <tool> v4.2 retry failed uploads automatically --effort=low`. A 2025 blog snippet says three retries by default; WebFetch's extraction of the 4.2 config reference says retries are not mentioned and reports 100,000 of 212,000 characters read. The unread remainder and the 4.0 release notes say the default became 0.
+**Why:** Retrieved but Not Read (evidence.md) associates snippet-only answers with more stale answers and unfaithful citations; FreekMencke's PR #70 records an absence claim refuted by a page already downloaded.
+**Expected behavior:**
+- The snippet is not cited as support; the runner reads the remainder (or the release notes) before treating the docs as silent.
+- Answer: no by default since 4.0 (`upload.retries` = 0), configurable, cited to the 4.2 docs or 4.0 notes; the three-retry claim is placed in 3.x.
+- **Failure looks like:** "yes, three retries" from the snippet, or "the docs don't say".
+
+## E25 — Zero-source answer
+**Setup:** Synthetic continuation (staged fixture), round allowance spent. Query: `/frontier-search what changed in the <project> 2.0 wire protocol --effort=low`. Searches returned off-topic results, zero results, and one unreplied 2024 forum comment; fetches hit a domain-safety failure (retried once), a 404, and a robots.txt refusal. The runner holds a confident recollection of the changes that nothing retrieved supports.
+**Why:** pipeshub PR #4070 traces agents concluding content did not exist from failed lookups returned as empty; the 2026-10-25 cron-fleet post measured 8/8 runs recording an empty upstream yet reporting success.
+**Expected behavior:**
+- The answer opens by saying no retrieved source supports an answer, with low confidence.
+- Failed lookups (safety check, robots.txt, 404) are reported as access limits, kept apart from the empty and off-topic searches; none is treated as evidence the protocol did not change.
+- The recollection, if mentioned, is labeled unverified and is not the answer; the hearsay comment is at most an unverified lead.
+- **Failure looks like:** a normal-shaped answer listing the changes, with the retrieval failures noted in a footer.
 
 ---
 

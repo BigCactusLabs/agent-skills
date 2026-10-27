@@ -23,23 +23,23 @@ codex exec -s read-only -c 'web_search="live"' \
   "<question + frontier signal posture>" </dev/null
 ```
 
-Codex primary → Claude (web tools must be allowed explicitly; checked on Claude Code 2.1.302):
+Codex primary → Claude (web tools must be allowed explicitly; checked on Claude Code 2.1.311):
 
 ```sh
 claude -p "<question + frontier signal posture>" --model opus \
   --allowedTools "WebSearch,WebFetch" </dev/null > <scratchpad>/claude-sweep-$(date +%s).md
 ```
 
-Keep the prompt before `--allowedTools`, which takes a variable-length list. `-p` search budgets do not refill by default (v2.1.290+), so the 200-call cap is hard. The `opus` alias tracks the current Opus; Bedrock, Vertex, and Foundry may map it to an older build, and WebSearch is unavailable on Bedrock.
+Keep the prompt before `--allowedTools`, which takes a variable-length list. In `-p` the 200-call limit counts per run and does not refill by default (v2.1.290+), so it is hard for one sweep. The `opus` alias tracks the current Opus; Bedrock, Vertex, and Foundry may map it to an older build, and WebSearch is unavailable on Bedrock.
 
 Use a unique output path and reject a sweep file older than its launch. Headless runs of either CLI can bill without a consent prompt; use only existing authorization.
 
 ### Choosing or replacing the pin
 
-Lineups change monthly; confirm an ID is live first (Codex: `~/.codex/models_cache.json`; Claude: the installed CLI's model list). Snapshot 2026-09-30, re-checked 2026-10-17 (catalog unchanged; codex-cli 0.163.0, Claude Code 2.1.302):
+Lineups change monthly; confirm an ID is live first (Codex: `~/.codex/models_cache.json`; Claude: the installed CLI's model list). Snapshot 2026-09-30, re-checked 2026-10-26 (codex-cli 0.164.0, Claude Code 2.1.311; the catalog adds `gpt-6.1-terra`, and 0.163–0.164 changed no web-search behavior):
 
 - **Always pin model and effort.** Unpinned, `codex exec` runs the catalog's top model at its default effort, listed locally as `low` for `gpt-6.1-sol` (the [API model page](https://developers.openai.com/api/docs/models/gpt-6.1-sol) says `medium`).
-- **Codex:** `gpt-6.1-sol` is the workhorse, `gpt-6-sol` the previous generation; `gpt-6-astra` (~5× cost) is for a hard judgment; `gpt-6-luna` and `gpt-5.6-*` (no bare `gpt-5.6`) fit enumerable lookups, not a sweep. Never pin `gpt-5.5` (legacy) or `gpt-reserve` (hidden); skip `ultra` effort (auto-delegates).
+- **Codex:** `gpt-6.1-sol` is the workhorse, `gpt-6-sol` the previous generation; `gpt-6-astra` (~5× cost) is for a hard judgment; `gpt-6-luna` and `gpt-5.6-*` (no bare `gpt-5.6`) fit enumerable lookups, not a sweep. Never pin `gpt-5.5` (legacy), `gpt-reserve` (hidden), or the Terra tiers (user decision 2026-10-26); skip `ultra` effort (auto-delegates).
 - **Claude:** prefer `opus`. Fable-tier silently bills usage credits in `-p`; use it only when the question demands it. Haiku is too weak for a sweep.
 - **Codex flags:** `web_search` accepts `disabled`, `cached`, `indexed`, `live`; only `live` reflects current state. `--search` is a top-level flag, not an `exec` flag. Pass `web_search` explicitly: since 0.161.0 implicit client settings no longer override server or saved-thread settings. Since 0.162.0 a custom provider with `external_web_access = false` keeps hosted search off the live web whatever the prompt says, so confirm a sweep searched live before treating it as a freshness check.
 

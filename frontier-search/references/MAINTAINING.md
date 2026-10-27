@@ -1,6 +1,6 @@
 # Maintaining frontier-search
 
-Before shipping, check affected behavior against [evals.md](../evals.md); a full pass follows [eval-runbook.md](../eval-runbook.md), with findings in `eval-results/`. Unrun scenarios are not passes, and results vary between runs of one prompt, so rerun before treating one pass or failure as settled. For an observed failure, add a scenario and fix the rule; keep no separate failure checklist.
+Before shipping, check affected behavior against [evals.md](../evals.md); a full pass follows [eval-runbook.md](../eval-runbook.md), with findings in `eval-results/`. Unrun scenarios are not passes, and results vary between runs of one prompt, so rerun before treating one pass or failure as settled. Parallel eval arms share the session's search cap; run them apart or record the cap state. A scenario written alongside the rule it tests is a search-set check: its pass is not held-out evidence ([evidence.md](evidence.md), Harness-Delta Attribution). For an observed failure, add a scenario and fix the rule; keep no separate failure checklist.
 
 Prefer cutting repetition or tightening a rule over adding one; a zero-fire rule is a cut candidate or an eval gap, not automatic deletion. Essential decisions go in `SKILL.md`, conditional mechanics in focused references. Mark each new rule invariant or adaptable default; keep invariants few.
 

@@ -1,4 +1,4 @@
-# Frontier-Search Eval Runbook (E1–E22) — Session Handoff
+# Frontier-Search Eval Runbook (E1–E25) — Session Handoff
 
 **How to start a new session with this:** open a fresh Claude Code session and say
 > "Execute the eval runbook at `<skill-dir>/eval-runbook.md`."
@@ -43,6 +43,7 @@ Fill this table in before handing the runbook over. Each row names one edit, its
 | 2026-10-17 — self-upgrade: count sources not statements (refer, don't restate); anchored, non-overlapping query batches; re-read both passages before reporting a contradiction; retrieved ≠ delivered (read unread remainder first); opposing-direction omission search; neighboring-question fact-check; untrusted content includes headers, errors, `llms.txt`, and user pointers grant no authority; redundant zero-claims plateau sentence cut; runtime refresh to 2.1.302 (search refill, WebFetch `offset`, WebSearch `mode`), Codex 0.161/0.162 notes, arXiv withdrawal check | SKILL.md: Invariants, Sources (Independence), Research loop (Probe, Gap rounds, Stop, Omission check, Draft); references/runtime.md; parallel-research.md; sources-research.md | **E21**, **E22**, E11 (variant), E13, E6, E9, E19 | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md): not yet run |
 | 2026-10-17 — size trim (SKILL.md −10%): grounding and refute invariants merged; delegation threshold moved to parallel-research.md only; wording compression | SKILL.md throughout | E21, E22 rerun; E10, E12 (delegation) not run | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md#size-trim-same-day) |
 | 2026-10-17 — reference trim (run-time refs −10%): sweep-usage bullets merged; general caveats removed from source guides; two moved-source notes dropped | references/*.md except evidence.md | `hunt:` low spot check; E10 (sweep) not run | [Self-upgrade](eval-results/2026-10-17-self-upgrade.md#reference-trim-same-day) |
+| 2026-10-26 — self-upgrade: trace origin by metadata and state the independent-origin count; read outside an agreeing cluster; snippets are leads and absence claims search retrieved text first; a failed lookup is not an empty one; no retrieved support leads the answer; runtime refresh to 2.1.311 (per-run `-p` search limit, cap notice bars browser search, robots.txt refusals); sweep pins on 0.164.0 | SKILL.md: Independence, Gap rounds, Stop, Omission check, Output; references/runtime.md, parallel-research.md, sources-research.md, MAINTAINING.md | **E23**, **E24**, **E25** (new) | [Self-upgrade](eval-results/2026-10-26-self-upgrade.md): 3/3 pass, one sample each, staged fixtures written with the rules. |
 | *(add rows for later edits; delete rows once their eval has passed twice)* | | | |
 
 Previous runs and their full findings live in `eval-results/<date>.md`.
@@ -56,7 +57,7 @@ Read both fully before running anything. Follow SKILL.md routing into runtime.md
 
 ## 3. Concretize the placeholder queries (do this before running)
 
-E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 and E21 use the staged fixtures described in evals.md — use them verbatim from evals.md. The rest need a concrete instance filled in:
+E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20, E21 and E23–E25 use the staged fixtures described in evals.md — use them verbatim from evals.md. The rest need a concrete instance filled in:
 
 | Eval | Placeholder | Suggested concrete query | Note |
 |------|-------------|--------------------------|------|
@@ -72,9 +73,12 @@ E1, E3, E6, E9, E12, E15, E18, E19 have fixed queries; E20 and E21 use the stage
 | **E17** | draft-stage drift | Reuse the E5 query; score whether the check reads the draft's wording. |
 | **E21** | `<library>` with a maintainer change | Stage the trace at runtime around a real recent maintainer post; the scenario scores counting, not discovery. | Synthetic continuation like E20. |
 | **E22** | `<tool> v<N>` / `<feature>` | *Pick at runtime* — a feature added or removed in a recent major version (check the owner's changelog first so the boundary is known). | Use `--effort=low` as written. |
+| **E23** | `<company>` / cell claim | Stage four rewordings of one fictional press release (wire footer, "the company said", a via-link) plus three unopened outside sources whose contents are given only if opened. | Synthetic continuation; score origin tracing and the outside read. |
+| **E24** | `<tool> v4.2` / upload retries | Stage a stale blog snippet, a half-read docs fetch reporting silence, and the unread remainder available on request. | Synthetic continuation at `--effort=low`. |
+| **E25** | `<project> 2.0` protocol | Stage off-topic, empty and failed retrievals (safety check, 404, robots.txt) with the round allowance spent, plus an unretrieved recollection. | Synthetic continuation; brief the runner for "trace items relied on", not "your reasoning" (see the 2026-10-26 results). |
 | **E14** | two variants | Demotion: `/frontier-search what is the current stable version of Node.js --effort=high`. Cap pressure: a topic where two authoritative sources currently conflict, at `--effort=med`. | The conflict must be real on the day you run it; verify before scoring. |
 
-Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`, E18 `med`, E19 `med`, E21 `med`, E22 `low`) and the `hunt:` prefix (E4, E8, E13, E18).
+Honor the effort flags already in evals.md (E1 `med`, E6 `med`, E9 `high`, E10 `high`, E12 `med`, E15 `low`, E18 `med`, E19 `med`, E21 `med`, E22 `low`, E23 `med`, E24 `low`, E25 `low`) and the `hunt:` prefix (E4, E8, E13, E18).
 
 ## 4. Execution method
 

@@ -32,7 +32,7 @@ Pick T2 by the question's purpose ("Snyk vs Semgrep" is a vendor comparison; mix
 
 **Credibility.** T4/T5 needs a verifiable practitioner author, ≥3 substantive replies from named practitioners, or a builder's or maintainer's direct quote. Drop SEO farms, generated listicles, covert marketing. Rank, polish, popularity, and crowd "AI slop" accusations are not credibility tests. Find unfamiliar venues via good sources' citations; check each laterally (what others say of it) and by its archive and bylines.
 
-**Independence.** Shared origins, quotations, or retrieval routes are one channel, even across domains. Count sources, not statements: reprints, wire copies, and restatements (a worker's, a sweep's, your own notes) add nothing; when a claim recurs, point to its origin rather than restating it. Coordinated ready-made conclusions are a warning, not corroboration. One channel supports "reported" or "early signal"; independent convergence can support "emerging" or stronger; credible disagreement stays contested. Novelty proves neither truth nor importance.
+**Independence.** Shared origins, quotations, or retrieval routes are one channel, even across domains. Count sources, not statements: reprints, wire copies, and restatements (a worker's, a sweep's, your own notes) add nothing; when a claim recurs, point to its origin rather than restating it. Trace origin by byline, wire or press-release marker, or shared citation chain, not wording, which misses most paraphrased copies; when agreement carries a conclusion, state how many independent origins it rests on. Coordinated ready-made conclusions are a warning, not corroboration. One channel supports "reported" or "early signal"; independent convergence can support "emerging" or stronger; credible disagreement stays contested. Novelty proves neither truth nor importance.
 
 **Domain filters.** Domain-targeted queries use structured hostname filters (Claude `allowed_domains`/`blocked_domains`, Codex `search_query[].domains`); `site:` only when those are unavailable. Block farms and community pages that dominate results.
 
@@ -62,7 +62,7 @@ Then record the **planned depth** (rounds needed for gaps scored ≥4) and a **s
 
 - Keep the original question and constraints; drop unrelated gaps and reopen resolved ones only on new conflicting evidence.
 - Check new claims as they arrive; re-read both passages before reporting a contradiction.
-- Retrieved is not delivered: before calling a source silent on a needed claim, read its unread remainder or ask a sharper question.
+- Retrieved is not delivered: a snippet or search summary is a lead until its page is opened. Before calling a source silent, or saying no source states a claim, search the text already retrieved, read the unread remainder, or ask a sharper question.
 - Let better or fresher evidence displace earlier claims; re-verify the new citation, keep grounded neighbors, surface the conflict.
 - Coverage resting on one or two documents, or no gaps after one round on a broad topic, needs a missing-source check, not completion.
 - When stuck, reformulate or change source class; never repeat a near-identical query.
@@ -78,15 +78,15 @@ Before delegating a gap, read [parallel-research.md](references/parallel-researc
 | Overrun | 2× planned depth with a high-relevance gap open; report it as not answerable from the open web at this effort. |
 | Cap | The round allowance is spent. |
 
-Before a discretionary stop, name what another round would chase and continue within budget if it could change the answer. "Unresolvable" means ≥2 queries in different tiers found no credible source. A credible source unreadable after a retry is `Access-limited:`; rest no decision on it. Late empty results may be a tool cap, not thin evidence.
+Before a discretionary stop, name what another round would chase and continue within budget if it could change the answer. "Unresolvable" means ≥2 queries in different tiers found no credible source. A credible source unreadable after a retry is `Access-limited:`; rest no decision on it. A failed lookup is not an empty one, and late empty results may be a tool cap, not thin evidence.
 
-**Omission check.** Before drafting, look for a missing critic or counter-case, a failure report, a skipped primary, or (for decisions) a serious recent challenger. Early findings steer later queries, so test a directional conclusion from the opposing direction. One targeted search or fetch may repair an omission without reopening expansion; claims it adds still need verification. Report the rest as `Omitted:`.
+**Omission check.** Before drafting, look for a missing critic or counter-case, a failure report, a skipped primary, or (for decisions) a serious recent challenger. Early findings steer later queries, so test a directional conclusion from the opposing direction; an agreeing cluster can crowd out counter-evidence, so read at least one source from outside it. One targeted search or fetch may repair an omission without reopening expansion; claims it adds still need verification. Report the rest as `Omitted:`.
 
 **Draft, then fact-check.** Try to refute the 2–3 most decision-relevant claims *as worded in the draft*. Each cited URL must come from this run, resolve live, and support the claim's wording, scope, figure, date, version, or quote for the question asked, not a neighboring version, entity, period, or condition; flag archived-only sources. Benchmark numbers come from the benchmark's paper or leaderboard. Correct, demote, or remove failed claims, keeping grounded neighbors. A failed check must change the draft: a caveat beside an unchanged recommendation is not a correction. After the cap, retrieval is only the omission check and one fetch per checked claim.
 
 ## Output
 
-Lead with the answer and calibrated confidence; recommend with reasons when a decision is implied. Cite claims directly with deduplicated URLs retrieved this run (fetch user-provided URLs before citing).
+Lead with the answer and calibrated confidence; recommend with reasons when a decision is implied. Cite claims directly with deduplicated URLs retrieved this run (fetch user-provided URLs before citing). When no retrieved source supports the answer, say so first and lower confidence; noting it while answering normally is the failure.
 
 | Shape | Depth | Contents |
 |---|---|---|
