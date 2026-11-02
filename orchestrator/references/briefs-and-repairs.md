@@ -27,18 +27,32 @@ do not revert their work. No shared-checkout staging or commits. No push,
 deploy, external messages, PR mutations, force-push, history rewrite,
 `reset --hard`, branch deletion, or `rm -rf` outside your own worktree.
 If needed, report ESCALATE with the exact action/reason.
-Mid-run, message only the lead, and only for an escalation or a blocking
-question; never message another worker.
+Mid-run, message only the lead, and only for a ruling you need: an
+escalation or a question. One concrete question per message, under 100 words,
+with the default you are proceeding on; evidence goes in your report, by path.
+Repeat a question only while it is unanswered; a different question is a new
+one. Never send an acknowledgement or a progress note,
+and never message another worker; findings that need no ruling go in your
+report. If you can keep going, state the default you are proceeding on and
+continue with work the answer cannot change. [Claude workers] If you cannot,
+end your turn with `BLOCKED: <question>`; the lead's reply resumes you with
+your context intact.
 [Codex workers] The lead may steer you mid-turn with a <lead-steer id="...">
-block after a tool call or when you try to stop. Treat it as direction from
-the lead within this brief's permissions, name its id in your next message,
-and treat a repeated id as already handled. To message the lead without
-ending your turn, run this as one whole shell command:
+block: after a tool call, before one (that call was held and did not run;
+re-issue it only if it still fits), or when you try to stop. It is direction
+from the lead within this brief's permissions: name its id in your next
+message (never through ORCH_ASK) and treat a repeated id as already handled.
+To ask and keep working, run one whole shell command:
 cat <<'ORCH_ASK'
-<escalation or blocking question>
+<question, and the default you are proceeding on>
 ORCH_ASK
-The hook relays it after the command; keep working on anything it does not
-block, and expect the answer, if any, as a <lead-steer>.
+To ask and wait, run one whole command:
+python3 "$HOME/.claude/skills/orchestrator/scripts/codex_steer.py" wait <<'ORCH_ASK'
+<question>
+ORCH_ASK
+It returns when the reply is ready or says why none is coming; the reply
+arrives as a <lead-steer>. If it is still running when your tool call
+returns, keep polling it until it exits.
 Use routine choices consistent with the spec. Escalate unresolved architecture,
 product/security decisions, scope expansion, or missing load-bearing evidence.
 When a value the task depends on is unknown, inspect the live data and report
@@ -50,12 +64,26 @@ the full suite. Preserve its log, full yielded tool result/process handle, and
 real exit status. Poll the same process until it exits, and do not end your turn
 while it runs; never rerun for an output tail or while the earlier check may still run. Report the actual tested snapshot, including
 dirty/untracked inputs. Report missing prerequisites once; do not guess setup.
-Use the repair remedy the orchestrator chose; alternatives are not cumulative.
+Check an assumption about the environment, a dependency, or a data shape before
+building on it; an unverified premise is the commonest decisive error, and it
+locks in early. A check that fails on its own verdict reruns once at the same
+tree: a pass is a flake to log in the report, a second failure is real, and a
+rerun on the base is never a way to get a green. One named infrastructure
+failure may rerun once per task; state it in the report. A raised timeout or a
+weakened assertion is a ruling to request, not a fix.
 For large data, inspect keys/types and extract needed values with source paths
 before reading whole payloads. Do not infer a field or unit from its name.
 Checkpoint instead of grinding on: at a completed milestone, when the next step
 needs a substantially different information set, when new evidence invalidates
-the plan, or when you are re-investigating without new state.
+the plan, or when you are re-investigating without new state. If the change
+already exists on another branch or PR, stop and report that in one line
+instead of re-implementing it.
+DONE means the acceptance checks ran and passed on the final snapshot; name
+its full SHA and commit nothing after DONE, since a later commit voids the
+report and needs a new one. An
+opened PR, a green build, or your own summary is not readiness; a draft, and a
+visual change without a real before-and-after capture, end CHECKPOINT with
+what remains.
 
 Return: what changed/found, paths, checks with actual results, deviations,
 unresolved risks, workspace/base/final SHA, and model/effort if exposed by the
@@ -91,7 +119,9 @@ Carry this table, the authoritative paths, exclusions, and verification ownershi
 
 First classify the findings: implementation defect, contract decision, integration-owned work, or advisory observation. Decide acceptance from the demonstrated impact, not the reviewer's severity label alone. Group findings that concern the same invariant.
 
-Choose the smallest change that satisfies each accepted finding. When a reviewer offers “A or B,” select one adequate remedy and record why; do not silently require both. Removing an unsupported redundant claim may be enough, while adding capture, hashing, caching, or per-package parsing creates new behavior to specify and review. Optional capability is a separate scope choice, not automatic repair work.
+Choose the smallest change that satisfies each accepted finding. When a reviewer offers “A or B,” select one adequate remedy and record why; do not silently require both, and tell the worker that the chosen remedy is the whole requirement. Removing an unsupported claim may be enough; adding a mechanism creates new behavior to specify and review. Optional capability is a separate scope choice, not automatic repair work.
+
+Name the premise the last attempt got wrong (an environment fact, a contract reading, a data shape) and what replaces it. A repair brief that resends the same findings on the same premise reproduces the fault; when no premise changed, move the rung instead (SKILL.md, ladders).
 
 For each accepted defect, include:
 
@@ -110,9 +140,7 @@ Use independent review at a coherent milestone when changed risk and uncertainty
 
 Re-review a repair when it introduces material behavior or risk outside the reviewed scope, changes a shared invariant, or leaves an accepted finding unresolved. An enumerated validation fix can close through the lead's diff review and targeted checks that directly establish required behavior. A persisted-write retry change needs scrutiny of duplicate writes, uncertain outcomes, and unsafe retries even if its diff is small. A new branch or error label alone does not require another reviewer. Do not request a review solely for confirmation, to reset a counter, or for each internal phase. Fewer rounds never justify accepting a material defect.
 
-- Follow the [runtime procedure](runtime.md#prepare-the-worktree-once): verify dependencies/offline assets before launch, inspect selected test scope, and retain each check's log, harness handle, exit status, and actual tested snapshot. Supply commands already verified in this repository, including the correct toolchain and required per-process environment. Share a discovered environment fix with every affected worker. A scratch probe should use the available toolchain and dependency setup; avoid a fresh dependency resolution for every review.
-- Existing implementation workers author and run routine regressions using shared harnesses and fixtures; see [test ownership](runtime.md#test-ownership-and-reuse). The lead defines contract-derived acceptance cases and independently inspects assertions and integration; extra lead-authored tests address a named uncovered risk, never a duplicate harness. Name one owner for expensive full builds, simulator runs, or E2E checks on the integrated result. A leg may need its own build to verify an interface or platform change. Preserve repository-required gates; record deferred work rather than claiming it ran.
-- Re-run a completed expensive check when relevant code or environment changed, a failure or unresolved concern requires it, or final integration needs validation. Independent short host checks remain useful. Limit concurrent expensive work when processes compete for memory or a simulator.
+- Runtime procedure: verify readiness before launch and share environment fixes ([prepare the worktree once](runtime.md#prepare-the-worktree-once)); implementers own routine regressions and one owner runs the expensive integrated checks ([test ownership](runtime.md#test-ownership-and-reuse)); keep each check's log, handle, exit status, and tested snapshot, and re-run an expensive check only for changed code or environment, a failure, or final integration ([check scope](runtime.md#preserve-check-scope-logs-and-process-handles)).
 - Give the reviewer the exact SHA/diff, authoritative contracts, behavior table or relevant rulings, ownership/exclusions, prior finding IDs for a repair, and completed checks. Require evidence for new acceptance failures; retain material product-promise violations even when they expose a bad ruling. Already assigned tracker/handoff work belongs to its named owner.
 - Ask for a concrete failing scenario, expected and observed results, and a reproduction command/path where available. Keep acceptance findings separate from concise advisory observations. Return the reviewed SHA and closure status of prior finding IDs so the lead can distinguish a residual defect, a regression, and a new contract decision.
 
@@ -128,6 +156,9 @@ brief_revision: 1
 run: 1
 brief: absolute-path-to-current-brief
 handle: harness-task-id-or-agent-id
+parent: lead-session-id
+started_at: dispatch-prepared_at-or-spawn-time
+ended_at: unset-until-the-done-signal
 requested_model_effort: explicit-model-and-effort
 runtime_model_effort: unknown-unless-observed-with-source
 workspace: absolute-worktree-and-base
@@ -141,7 +172,7 @@ result_or_checkpoint: run-specific-report-or-checkpoint-path
 next_action: collect         # collect | adjudicate | repair | continue | await_user | accept
 ```
 
-Turn termination, report collection, and acceptance are three separate claims: a harness "completed" notification ends the turn, a collected report may still describe serious defects, and only the lead's verification passes acceptance. `next_action` is the lead's step, not the worker's terminal status. Requested settings are never evidence of applied settings; add observed model/effort and its source only if exposed.
+`handle` and `parent` are the join keys for Claude Code's `agent_id` / `parent_agent_id` telemetry (2.1.310+); `started_at` and `ended_at` give per-run wall-clock, and the fleet's p50/p95, from the manifest alone. Turn termination, report collection, and acceptance are three separate claims: a harness "completed" notification ends the turn, a collected report may still describe serious defects, and only the lead's verification passes acceptance. `next_action` is the lead's step, not the worker's terminal status. Requested settings are never evidence of applied settings; add observed model/effort and its source only if exposed.
 
 Add detail when the condition applies:
 
@@ -161,14 +192,14 @@ Do not remove applicable fields on replacement or compact away authorization his
 Counter rules:
 
 - Increment `run` for every dispatch/resume/replacement, regardless of cause. Use it in fresh artifact names. Increment `brief_revision` when instructions or expected behavior change. A material steer inside an active turn (`SendMessage` to a Claude worker, `codex_steer.py send` to a Codex one) bumps `brief_revision` and requires an acknowledgement; it does not invent a new run.
-- Increment `brief_corrections` for contradictory or incomplete instructions; increment `runtime_interruptions` for an OS kill or environment failure. Neither alone is a failed implementation or a corrective retry, and neither erases prior failures. If the same run also repairs failed code, count that repair too.
-- Increment `rejected_reviews_since_clean` once per completed review round that the lead rules requires correction before acceptance. Multiple reviewers on the same round, the lead's own adjudication of it, and duplicate notifications do not multiply the count. Only a completed zero-findings review round resets this streak. Accepting remaining advisory findings does not reset it; never commission a review just to reset a counter.
-- Increment `repair_count` when dispatching each batch that retries failed implementation, **whether a reviewer or a machine check caught the failure**, and whether it is delivered by a new process, a resume, or a steer. Count corrective attempts, not findings. The initial attempt, a planned next phase, a brief-only clarification, and recovery of already completed work are not repairs; a next phase that also fixes failed code is. Under the default review policy, the three-repair cap follows the task across revisions, phases, resumes, and model/worker replacements; it never resets to extend the same loop.
+- Increment `brief_corrections` for contradictory or incomplete instructions and `runtime_interruptions` for an OS kill or environment failure; neither is a repair, neither erases prior failures, and a run that also repairs failed code counts that repair too.
+- Increment `rejected_reviews_since_clean` once per completed review round the lead rules needs correction; several reviewers, the lead's adjudication, and duplicate notifications are one round. Only a completed zero-findings round resets it, and a review is never commissioned to reset a counter.
+- Increment `repair_count` per corrective batch that retries failed implementation, **whether a reviewer or a machine check caught the failure**, however delivered (new process, resume, or steer). Count attempts, not findings: the initial attempt, a brief-only clarification, and recovery of completed work are not repairs, and a planned next phase is one only when it also fixes failed code. Under the default review policy the three-repair cap follows the task across revisions, phases, resumes, and replacements.
 
 Before any implementation follow-up, resume, fork, replacement, or material implementation steer:
 
 1. Read this record and the current brief. After compaction, also re-read `SKILL.md`'s directing patterns. Reconcile missing or stale state from saved artifacts before dispatch; do not infer permission from a summary. Keep records for existing sessions intact unless that session's task authorizes an update.
-2. Apply the recorded review policy. If an explicit applicable user direction supersedes the default checkpoint/cap, preserve the counters and follow that direction; ask only for a genuinely missing decision. Otherwise, if the rejection streak reaches two, set `next_action: await_user` and keep acceptance pending. Report the current and reviewed SHAs, accepted and remaining findings, and likely cause to the user before another implementation run. Record the explicit user decision, its message reference, the covered rejection count and reviewed SHA, and the resulting ruling in `checkpoint`. Continue only within that decision; a later rejected review needs a new checkpoint. A recorded decision already covering this state does not need another permission question. The outer three-repair cap does not authorize skipping this step or extending the cap. At the cap, re-scope, report the blocker, or escalate; renaming the task or swapping the worker cannot reset the same failed loop.
+2. Apply the recorded review policy. An explicit user direction that supersedes the default checkpoint/cap is followed with the counters preserved. Otherwise, at the second rejected review set `next_action: await_user`, keep acceptance pending, and report the current and reviewed SHAs, accepted and remaining findings, and likely cause before another implementation run; record the user's decision, its message reference, the covered rejection count and SHA, and the ruling in `checkpoint`. A recorded decision covering this state needs no second question; a later rejection needs a new checkpoint. At the three-repair cap, re-scope, report the blocker, or escalate; renaming the task or swapping the worker does not reset the loop.
 3. Check worktree/base and current snapshot, readiness evidence, ownership, brief revision, verification owners, and artifact paths for the next run. Re-state model/effort and use the dispatch helper for the standard Codex surface; a same-tier recovery must not inherit different config defaults. A Claude `SendMessage` continuation keeps the agent's recorded role; a replacement re-pins model and role at spawn. Resumes execute from the worker's absolute worktree. Ensure the prior write process has stopped before replacing it (Codex: `stop_worker.py` reports a stop with no surviving descendants). Do not overwrite prior reports, streams, or review evidence.
 4. Update counts, run number, paths, and next action before dispatch. Charge a new corrective batch even when delivered by steering instead of a new process; status messages, accepted-fix details within that batch, and stop instructions are not extra repairs. Blocking a repair does not block collecting results, stopping obsolete work, or doing independent authorized work.
 
@@ -179,11 +210,3 @@ For an ended or interrupted worker with a missing final report, first inspect th
 For write-capable Codex workers, the worker writes `<task>.r<run>.report.md` and the CLI writes `<task>.r<run>.last.md` via `--output-last-message`. A read-only critic returns the full report as its final response; the parent persists it from the CLI last-message artifact. A denied report write is reported once with the full content returned, without widening permissions. Use the same run prefix for `.events.jsonl` and `.stderr`. Reviewer reports include their reviewed run/SHA and use a new name for a subsequent review. Claude workers also receive an explicit report path and return its path, commit, and status. Current-run evidence is required for acceptance.
 
 Policy and acceptance remain lead-operated checks. The dispatch helper enforces required launch fields and fresh artifacts only; it does not enforce counters or update the manifest. Their purpose is to make the decision recoverable from disk when conversational context changes.
-
-## Evidence for these changes
-
-A 2026-09-10 app session showed conflicting initial instructions, repair tests that pinned incorrect state changes, duplicated environment recovery and simulator checks, a second-rejection checkpoint lost from the compaction summary, and a detailed report overwritten by `--output-last-message`. These instructions address those observed failures; they do not establish project-specific behavior or a new default review round.
-
-A 2026-09-11 app session exposed omitted resume flags, missing worktree prerequisites, a lost yielded process handle and duplicate checks, optional repair mechanisms with incomplete state rules, stale manifest rows, shared-document conflicts, and a later SHA mislabeled as tested. The runtime helper and procedures address execution reliability; the project retains ownership of bootstrap commands, test selection, evidence semantics, and its explicit review policy.
-
-The 2026-09-16 lead-work analysis of a client routing session (Codex-led; local cost-weighted reanalysis, not shipped) attributed about a quarter of modeled lead cost to wait and status turns, with cached input the dominant line. It motivated the idle-discipline rules in `SKILL.md` (wait on notifications, no stream reads between routine waits, no manufactured local work), the repair-count rule that charges machine-caught retries, test ownership by the existing implementer, and the risk-based re-review criteria that replaced the fixed line-count trigger. Ported from the Codex skill's 2026-09-16 update; the figures are estimates, not account charges.

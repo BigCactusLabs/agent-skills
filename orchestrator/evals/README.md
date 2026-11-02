@@ -1,6 +1,6 @@
 # Opus effort-tier evals
 
-Also used for Codex arms on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `medium`, `high` and `xhigh` vs GPT-6 Astra `low` on the same implementer cases.
+Also used for Codex arms on 2026-09-30 (`run_codex_eval.py`, section at the end): GPT-6.1 Sol `medium`, `high` and `xhigh` vs GPT-6 Astra `low` on the same implementer cases. GPT-6.1 Terra `xhigh` and `max` were added on 2026-10-28.
 
 Empirical check of the effort ladder used by the Opus 5.5 roles in this repo:
 `implementer-opus` medium -> xhigh (retry), and
@@ -33,7 +33,7 @@ repo because Claude Code registers any frontmatter `.md` found in a subdirectory
 | `wiring_check.py` | Free oracle/null check of the implementer grader. Run it after touching fixtures or the grader. |
 | `results/` | Raw rows. Every headline in a report is recomputed from these. |
 | `case_dump.md`, `*.log` | Fix/test diffs used to author briefs, and pilot logs. |
-| `$AGENT_EVAL_DATA` (default `~/.cache/claude-agent-evals/`) | `fixtures/`, `mirrors/`, `runs/`. About 16 GB. Rebuild with `validate_fixtures.py` then `build_review_fixtures.py`. |
+| `$AGENT_EVAL_DATA` (default `~/.cache/claude-agent-evals/`) | `fixtures/`, `mirrors/`, `runs/`, `deps/`, `diffs/`. About 10 GB (2026-10-28, run workspaces cleared). Rebuild with `validate_fixtures.py` then `build_review_fixtures.py`. `deps/` holds `node_modules` for pptx-automizer and markedit-linktray, whose local clones are gone: installed 2026-10-28 from the f2cd69a and 4d8ecf8 fixtures' lockfiles with scripts off, and every fixture of those two repos links there. |
 
 ## Method notes
 
@@ -161,6 +161,51 @@ hidden-test grading is a machine check standing in for review-caught acceptance,
 Codex legs start at 6.1 Sol `medium`, review-caught at `xhigh`, `high` is not a rung. 6.1 Sol `low`
 was not measured.
 
+
+## Codex arms: GPT-6.1 Terra xhigh / max (2026-10-28)
+
+Same 15 implementer cases, one rep per arm, `-j 3`, codex-cli 0.165.0, timeout raised to 60 min (no run passed 14). Terra rates
+from learn.chatgpt.com/docs/pricing: 25 / 1.25 / 125 credits per Mtok, $1 / $0.05 / $5. Model and effort verified on all 30 rows; no
+errors or rate limits; every run ended `DONE`. The two Node cases (pptx-hyperlink, me-fragments) ran against the rebuilt `deps/`
+`node_modules` (see Layout); `wiring_check.py` passed on both before the sweep.
+
+| arm | pass | mean $ | mean credits | cost / success | median wall | median commands | mean output tokens | mean input (cached) |
+|---|---|---|---|---|---|---|---|---|
+| gpt-6.1-terra xhigh | 14/15 | $0.11 | 2.7 | $0.11 | 1.7 min | 21 | 5.4K | 885K (847K) |
+| gpt-6.1-terra max | 14/15 | $0.27 | 6.8 | $0.29 | 4.4 min | 53 | 19.4K | 2,091K (2,016K) |
+| gpt-6.1-sol medium (09-30) | 14/15 | $0.17 | 4.3 | $0.18 | 5.6 min | 15 | 4.5K | 552K (514K) |
+| gpt-6.1-sol xhigh (09-30) | 14/15 | $0.32 | 7.9 | $0.34 | 9.0 min | 22 | 10.9K | 906K (844K) |
+
+Both arms miss only dl-readme-blob, the brief-gap case every arm misses. Terra `xhigh` is the cheapest arm measured on this suite
+(0.65x Sol `medium`'s cost, 0.34x Sol `xhigh`'s) and the fastest, Astra `low` included; its slowest run was 4.1 min (private-4).
+Terra `max` costs about what Sol `high` does, runs 2.5x the commands of `xhigh` and reads 2.4x the input, and buys no pass on this
+suite; slowest run 13.7 min (private-2, 83 commands). Lines added: source 327 (`xhigh`) / 406 (`max`), tests 721 / 1,452, against
+Sol `medium` 344 / 826. Caveats: wall time compares runs four weeks apart, so server load is a confounder; one rep, hidden-test
+grading only (no review-quality, injection-robustness or long-context signal); Terra `low` / `medium` / `high` not measured. Routing
+is unchanged: Terra has been off the ladder since 2026-09-11 (user, 2026-10-26: "dont want terra in").
+
+**Code quality (lead's read, not blind).** Source diffs for 10 of 15 cases against each case's reference fix (dl-toolerror,
+dl-readme-blob, dl-mbox, private-5 and private-6 unread; test code unread). The fixes are correct, small and in scope, often
+near line-for-line with the reference (dl-mount, dl-tool-contract, private-1, private-3), and twice tighter than it
+(dl-tap-push checks every push URL with `--push --all`; pptx-hyperlink matches the source rId directly). Weak spots: a workaround where
+the plain change exists (dl-mcp-outdir keeps a default for a required parameter, `= ...` plus `# type: ignore` at `xhigh`, a pydantic
+`Field(...)` sentinel at `max`, to keep a `ValueError` for direct calls nobody asked for); `max` adds machinery (a chunked reverse
+log reader in private-2, a second open-orders check and token validation before the lock in private-3); `xhigh` gated
+pptx-hyperlink's hyperlink pass on the unrelated `insertBefore` flag; fewer why-comments than the reference, and repeated inline logic
+where the reference adds a helper (me-fragments). `xhigh` and `max` usually land the same source fix (four of the ten nearly
+identical); `max` spends the difference on tests (2x lines), docs and extra machinery.
+
+**Artifacts.** `$AGENT_EVAL_DATA/diffs/codex-implement/<run>.diff` holds each Terra run's committed diff (`git diff <base> HEAD`;
+all 30 match the recorded `diff` stats; no binary changes), and `<run>/` beside it the brief, event log, final message, report and
+stderr. The run workspaces were deleted after saving (2026-10-28); rebuild one by applying its diff to the fixture. Take diffs from
+commits, not working trees: grading leaves the hidden tests overlaid in each working tree. `diffs/terra-src-vs-reference-2026-10-28.md` is the source-only side-by-side read above. The Sol and Astra workspaces from
+09-30 are gone, so no Sol code is available to compare.
+
+**Parked (user, 2026-10-28: "lets log everything and park the evals").** Pick up with: (1) one same-day sweep of 6.1-sol `medium`,
+6.1-terra `xhigh` rep 2 and 6.1-terra `medium` (about 45 runs, ~$5), saving diffs as above, to remove the wall-time confounder and
+find Terra's cheapest passing rung; (2) a blind diff judge on a different model in the style of `grade_review.py` (minimality,
+idiom, comments, invented requirements) across Sol and Terra; (3) the reviewer suite and an injection-robustness check for Terra
+before any review-caught or untrusted-content routing.
 
 ## Scout lookup check (2026-09-30, local only)
 

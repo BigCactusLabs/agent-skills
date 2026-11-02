@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import tempfile
 from datetime import datetime, timezone
 
 
@@ -19,9 +20,18 @@ REQUIRED = {
 OPTIONAL = {"thread_id", "output_schema", "web_search", "user_gated", "skip_git_repo_check", "lead_inbox"}
 # `ultra` is user-gated per dispatch (SKILL.md); `minimal` is pre-5.6 legacy; `persistent` withholds turn.completed.
 EFFORTS = ("none", "low", "medium", "high", "xhigh", "max", "ultra")
-# The lead's Claude inbox. Only the hook gets it, renamed; worker shells get neither name (Codex shell exclude).
+# The lead's Claude inbox. Only the hook gets it, renamed; worker shells get neither name (Codex shell exclude),
+# nor the lead's session id, which names its run registry.
 LEAD_INBOX = {"CLAUDE_CODE_MESSAGING_SOCKET": "ORCH_LEAD_SOCKET", "CLAUDE_CODE_MESSAGING_TOKEN": "ORCH_LEAD_TOKEN"}
-WORKER_ENV_EXCLUDE = 'shell_environment_policy.exclude=["CLAUDE_CODE_MESSAGING_*", "ORCH_LEAD_*"]'
+WORKER_ENV_EXCLUDE = 'shell_environment_policy.exclude=["CLAUDE_CODE_MESSAGING_*", "ORCH_LEAD_*", "CLAUDE_CODE_SESSION_ID"]'
+
+
+def run_registry(environ=os.environ):
+    """This lead session's run names, so `codex_steer.py send <task>.r<run>` needs no path; None outside a session."""
+    session = environ.get("CLAUDE_CODE_SESSION_ID")
+    if not session or not re.fullmatch(r"[A-Za-z0-9-]+", session):
+        return None
+    return Path(tempfile.gettempdir()) / "orchestrator-runs" / session
 
 
 def absolute_path(value, name):
@@ -79,7 +89,9 @@ def prepare(record, environ=os.environ):
             raise ValueError(f"artifact already exists; advance run: {path}")
     # Pending-steer file for codex_steer.py; the hooks act only on runs that carry these variables.
     paths["steer"] = str(artifacts / f'{record["task"]}.r{record["run"]}.steer.md')
-    hook_env = {"ORCH_STEER_FILE": paths["steer"], "ORCH_STATUS_LINE": "0" if "output_schema" in record else "1"}
+    hook_env = {"ORCH_STEER_FILE": paths["steer"], "ORCH_STATUS_LINE": "0" if "output_schema" in record else "1",
+                # What a relayed ask tells the lead to reply to: the short run name when the registry can resolve it.
+                "ORCH_REPLY_TARGET": f'{record["task"]}.r{record["run"]}' if run_registry(environ) else paths["dispatch"]}
     if "lead_inbox" in record and type(record["lead_inbox"]) is not bool:
         raise ValueError("lead_inbox must be a boolean")
     if record.get("lead_inbox", True):  # false for untrusted-input legs: the run then cannot post to the lead
@@ -123,6 +135,19 @@ def main():
     if executable is None:
         raise ValueError("codex is not on PATH")
     artifacts.mkdir(parents=True, exist_ok=True)
+    registry = run_registry()
+    if registry:
+        # A name already held by another live record keeps it; this run is then answered by its record path.
+        try:
+            registry.mkdir(parents=True, exist_ok=True)
+            link = registry / Path(paths["dispatch"]).name
+            if link.exists() and link.resolve() != Path(paths["dispatch"]).resolve():
+                hook_env["ORCH_REPLY_TARGET"] = paths["dispatch"]
+            else:
+                link.unlink(missing_ok=True)
+                link.symlink_to(paths["dispatch"])
+        except OSError:
+            hook_env["ORCH_REPLY_TARGET"] = paths["dispatch"]
     # Exclusive marker reserves this run even if two callers race. Never overwrite evidence.
     with open(paths["dispatch"], "x", encoding="utf-8") as output:
         json.dump({

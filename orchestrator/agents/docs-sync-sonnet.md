@@ -3,6 +3,7 @@ name: docs-sync-sonnet
 description: Documentation-sync worker on Sonnet 5.5 at high effort. Updates docs a change made stale — README, CLAUDE.md, reference docs, memory notes, inline comments — limited to the doc paths the brief names and the source of truth it names. Commits on its own branch in a git worktree; never pushes, merges, or deploys.
 model: claude-sonnet-5-5
 effort: high
+color: green
 disallowedTools: Agent, NotebookEdit
 hooks:
   Stop:

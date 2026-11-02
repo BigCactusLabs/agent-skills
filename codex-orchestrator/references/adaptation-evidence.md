@@ -28,6 +28,17 @@ Tier coverage: T1, T3, and T4 support the decisions; T2 included this run's live
 
 An independent, bounded Opus research pass compared the two local skills and public sources. The parent fetched its new Cognition source before using it; agreement over shared sources was not counted as independent corroboration. Requested effort was `medium`, observed model was `claude-opus-5-5`, and applied effort was not exposed. This research pass was not a behavioral test of the edited skill.
 
+## Sync 2026-11-01
+
+Ported from the source `AUDIT.md` entries "2026-10-28 — GPT-6.1 Terra eval (parked)", "2026-11-01 — DeepSeek Harness super-agent patterns", and "2026-11-01 — frontier pass after the DeepSeek fold"; figures and links are in the source `REFERENCE.md` sections "Delegation and batching evidence" and "Frontier pass evidence". No routing, model, or effort rung changed.
+
+- Pins: codex-cli 0.166.0 and Claude Code 2.1.316, checked by local help only. The helper's flags exist on `exec`, `exec resume`, and `exec fork`; `--cd` and `-s` remain `exec`-only. 0.166.0 help lists `--worktree` on resume and fork; [cli-workers](cli-workers.md#preflight) records that it was not re-probed.
+- Lead: offload is not fan-out, from [Vals AI](https://www.vals.ai/blogs/multi-agent-vibe-code-bench) (one short closed job: a single agent at a higher rung matched a team at a fraction of the cost; GPT-6 Sol medium to max gained more than its team did) and [Block's Buzz](https://engineering.block.xyz/blog/effective-teams-buzz) (no team beat solo on short tasks for the price; teams helped on long-horizon tasks). Drain, then act, and one speculative read-only Luna leg per phase within capacity, from the DeepSeek Harness router batching and "silently reproduce and fix" rules.
+- Review: the second family buys independent coverage, not accuracy ([Song, arXiv 2610.01471v2](https://arxiv.org/html/2610.01471v2): a fresh same-model reviewer scored as well on code, a same-session second pass significantly worse). The source's fresh same-model fallback is adapted as Astra's own review, which is outside the author's session; a separate Astra judge still needs user direction.
+- Briefs: environment-assumption check, worker question shape, flake rule, frozen-snapshot `DONE`, existing-change report, and `CHECKPOINT` for drafts and uncaptured visual changes. `DONE` names a snapshot rather than only a SHA, because workers commit only when assigned. Repairs name the replaced premise or move the rung. The task record gains `parent`, `started_at`, and `ended_at`.
+- CLI streams: `exec` can drop item events under backpressure until turn end (openai/codex#57800), so scope verdicts come from the final diff.
+- Skipped: the Claude-side ask relay and urgent steers, `watch_events.py` and its idle alert, role colors, the cache-TTL probe, Claude effort-precedence variables, and the Claude `low`-rung note; this runtime has none of them.
+
 ## Keep source-specific rules out
 
 Do not copy Claude's permission bypass, role hooks, `Agent`/`SendMessage`/`TaskStop`, background sessions, larger pools, high-effort Astra workers, lane leads, or automatic PR/delivery conventions. Preserve Codex's sole lead, explicit model/effort ladder, native-first routing, sandbox-only CLI helper, restricted Claude reviews, and user-directed publication boundary. Do not add default duplicate research sweeps or progress-file polling; use the task's actual research and supervision needs.

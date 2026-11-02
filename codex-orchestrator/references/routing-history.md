@@ -18,6 +18,8 @@ Decided 2026-09-30, later the same day, after the user asked for 6.1 Sol `high` 
 
 User decision 2026-10-26 ("dont want terra in"): GPT-6.1 Terra stays off the ladder with the rest of the Terra family; no A/B was run.
 
+Measured 2026-10-28 (`~/.claude/agents/evals/README.md`, "Codex arms: GPT-6.1 Terra xhigh / max"): on the 15 hidden-test implementer cases, 6.1 Terra `xhigh` and `max` both passed 14/15 with the same brief-gap miss, at mean $0.11 / $0.27 and median wall 1.7 / 4.4 min, against 6.1 Sol `medium` at $0.17 / 5.6 min (from 09-30). The user parked the evals; no routing change, and Terra stays off the ladder.
+
 Clarification 2026-09-16: this skill is invoked from an existing Astra session, which remains the sole lead. Keep bounded Astra `low` workers; do not create additional orchestrators or ask the user to establish a lead merely to use the skill.
 
 The following claims were moved out of the runtime instructions on 2026-09-16. They were present in the installed skill; their original measurements were not re-audited for this cleanup:

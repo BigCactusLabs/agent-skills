@@ -2,10 +2,12 @@
 """Follow one Codex run's events for the Monitor tool: print a line only when the lead should look.
 
 Alerts: an edit outside the owned paths, the same command failing --repeat times, no new event for
---stall-seconds, and the turn ending (or the process exiting without a turn end), after which the
-watch exits. Events before --from-offset (default: the file's size at start) are counted, not
-alerted, so a re-armed watch stays quiet about them. An alert is a cue to read the events file; completion evidence is still the current
-run's `turn.completed` plus a non-empty `.last.md`.
+--stall-seconds, --idle-items tool calls in a row with no file change and no command not run before
+(busy, not progressing; off by default, meant for write legs), and the turn ending (or the process
+exiting without a turn end), after which the watch exits. Events before --from-offset (default: the
+file's size at start) are counted, not alerted, so a re-armed watch stays quiet about them. An alert
+is a cue to read the events file; completion evidence is still the current run's `turn.completed`
+plus a non-empty `.last.md`.
 """
 
 import argparse
@@ -28,11 +30,32 @@ def running(pid):
 
 
 class Watch:
-    def __init__(self, owned, repeat):
+    TOOL_ITEMS = ("command_execution", "file_change", "mcp_tool_call", "web_search")
+
+    def __init__(self, owned, repeat, idle_items=0):
         self.owned = [str(Path(path).resolve()) for path in owned]
         self.repeat = repeat
+        self.idle_items = idle_items
         self.failures = Counter()
         self.flagged = set()
+        self.seen_commands = set()
+        self.idle = 0
+
+    def progress(self, item):
+        """Count tool calls since the last file change or first-seen command; alert once per streak."""
+        if item.get("type") not in self.TOOL_ITEMS:
+            return []
+        command = item.get("command") if item.get("type") == "command_execution" else None
+        progressed = item.get("type") == "file_change" or (command is not None and command not in self.seen_commands)
+        if command is not None:
+            self.seen_commands.add(command)
+        if progressed:
+            self.idle = 0
+            return []
+        self.idle += 1
+        if self.idle_items and self.idle == self.idle_items:
+            return [f"{self.idle_items} tool calls without an edit or a new command"]
+        return []
 
     def outside(self, path):
         path = str(Path(path).resolve())
@@ -59,6 +82,7 @@ class Watch:
             self.failures[command] += 1
             if self.failures[command] == self.repeat:
                 found.append(f"same command failed {self.repeat} times: {command[:160]}")
+        found.extend(self.progress(item))
         return found, False
 
 
@@ -68,6 +92,8 @@ def main():
     parser.add_argument("--own", action="append", default=[], help="an owned path (repeatable); omit to skip the scope check")
     parser.add_argument("--repeat", type=int, default=3, help="identical failed commands before an alert (default 3)")
     parser.add_argument("--stall-seconds", type=float, default=600, help="quiet time before a stall alert (default 600)")
+    parser.add_argument("--idle-items", type=int, default=0, help="tool calls in a row with no file change and no "
+                        "first-seen command before a busy-not-progressing alert (default 0: off; for write legs)")
     parser.add_argument("--from-offset", type=int, help="alert on events from this byte offset; 0 on the first arm "
                         "(default: the file's size at start, so a re-armed watch stays quiet about old events)")
     parser.add_argument("--poll", type=float, default=1.0, help=argparse.SUPPRESS)
@@ -75,7 +101,7 @@ def main():
     record = json.loads(args.dispatch.read_text(encoding="utf-8"))
     label, events, pid = args.dispatch.name.removesuffix(".dispatch.json"), Path(record["artifacts"]["events"]), record["pid"]
     start = args.from_offset if args.from_offset is not None else (events.stat().st_size if events.exists() else 0)
-    watch, buffer, offset, position = Watch(args.own, args.repeat), b"", 0, 0
+    watch, buffer, offset, position = Watch(args.own, args.repeat, args.idle_items), b"", 0, 0
     last_event, stalled = time.monotonic(), False
     while True:
         try:

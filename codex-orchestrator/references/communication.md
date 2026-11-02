@@ -18,7 +18,7 @@ Acceptance delta: report active products only.
 Reply needed: acknowledge revision 3 and state the next action.
 ```
 
-Useful kinds are question, evidence, decision, blocker, acknowledgement, and result. These are labels in the message body, not tool parameters. Address the exact canonical handle returned by the runtime. Never target yourself as a substitute for a user update.
+Useful kinds are question, evidence, decision, blocker, acknowledgement, and result. These are labels in the message body, not tool parameters. Address the exact canonical handle returned by the runtime. Never target yourself as a substitute for a user update. Worker questions follow the shape in the [worker brief](briefs-and-repairs.md#worker-brief): rule on a blocking question first and treat the rest as report material.
 
 ## Important steering
 

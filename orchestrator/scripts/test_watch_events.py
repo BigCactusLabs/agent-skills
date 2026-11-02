@@ -79,6 +79,26 @@ class WatchEventsTests(unittest.TestCase):
         out, _ = process.communicate(timeout=10)
         self.assertEqual(out.splitlines(), ["TASK-3.r2: turn ended: turn.completed"])
 
+    def test_idle_items_alerts_once_per_streak_and_resets_on_progress(self):
+        process = self.watch("--idle-items", "3", "--from-offset", "0")
+        read = command("cat a.py", "completed")
+        self.append(edit(str(self.owned / "a.py")), read, read, read, read, read,
+                    command("cat b.py", "completed"), read, read,   # a first-seen command resets; two repeats stay quiet
+                    edit(str(self.owned / "a.py")), read, read, read, read, {"type": "turn.completed"})
+        out, _ = process.communicate(timeout=10)
+        self.assertEqual(process.returncode, 0)
+        self.assertEqual(out.splitlines(), [
+            "TASK-3.r2: 3 tool calls without an edit or a new command",   # the 2nd-4th repeats of `cat a.py`
+            "TASK-3.r2: 3 tool calls without an edit or a new command",   # the edit reset the streak
+            "TASK-3.r2: turn ended: turn.completed",
+        ])
+
+    def test_idle_items_off_by_default(self):
+        process = self.watch("--from-offset", "0")
+        self.append(*[command("cat a.py", "completed")] * 30, {"type": "turn.completed"})
+        out, _ = process.communicate(timeout=10)
+        self.assertEqual(out.splitlines(), ["TASK-3.r2: turn ended: turn.completed"])
+
     def test_exit_without_turn_end_is_reported(self):
         gone = subprocess.Popen(["true"])
         gone.wait()

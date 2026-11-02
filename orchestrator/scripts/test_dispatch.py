@@ -20,6 +20,7 @@ pathlib.Path(args[args.index("--output-last-message") + 1]).write_text("full rep
 print(json.dumps({"type":"thread.started", "thread_id":"12345678-1234-1234-1234-123456789abc"}))
 print(json.dumps({"type":"probe", "argv":args, "prompt":prompt, "cwd":os.getcwd(), "pid":os.getpid(),
                   "steer":os.environ.get("ORCH_STEER_FILE"), "status_line":os.environ.get("ORCH_STATUS_LINE"),
+                  "reply_target":os.environ.get("ORCH_REPLY_TARGET"),
                   "inbox":{k: v for k, v in os.environ.items() if "MESSAGING" in k or k.startswith("ORCH_LEAD")}}))
 code = int(os.environ.get("STUB_WORKER_EXIT", "0"))
 print(json.dumps({"type": "turn.failed" if code else "turn.completed"}))
@@ -39,8 +40,10 @@ class DispatchTests(unittest.TestCase):
         binary.mkdir()
         (binary / "codex").write_text(FAKE)
         (binary / "codex").chmod(0o755)
-        self.env = {**{k: v for k, v in os.environ.items() if not k.startswith("CLAUDE_CODE_MESSAGING")},
-                    "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}"}
+        # The lead's own inbox and session must not leak in; TMPDIR keeps the run registry inside the test.
+        self.env = {**{k: v for k, v in os.environ.items()
+                       if not k.startswith(("CLAUDE_CODE_MESSAGING", "CLAUDE_CODE_SESSION_ID"))},
+                    "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}", "TMPDIR": str(self.root)}
         self.brief = self.root / "brief.md"
         self.brief.write_text("Repair the named case.\nSecond paragraph.\n")
         self.record = {
@@ -211,13 +214,34 @@ class DispatchTests(unittest.TestCase):
         dispatch = json.loads(self.artifact("dispatch.json").read_text())
         self.assertEqual(dispatch["hook_env"]["ORCH_STEER_FILE"], str(self.artifact("steer.md")))
         self.assertEqual(dispatch["artifacts"]["steer_log"], str(self.artifact("steer.log")))
+        self.assertEqual(probe["reply_target"], str(self.artifact("dispatch.json")))  # no lead session: the path
+        self.assertFalse((self.root / "orchestrator-runs").exists())
+
+    def test_a_lead_session_registers_the_run_name_for_replies(self):
+        self.env["CLAUDE_CODE_SESSION_ID"] = "0b8e-lead"
+        self.assertEqual(self.run_record().returncode, 0)
+        self.assertEqual(self.probe()["reply_target"], "TASK-49.r1")
+        link = self.root / "orchestrator-runs" / "0b8e-lead" / "TASK-49.r1.dispatch.json"
+        self.assertEqual(link.resolve(), self.artifact("dispatch.json"))
+        self.assertEqual(json.loads(self.artifact("dispatch.json").read_text())["hook_env"]["ORCH_REPLY_TARGET"],
+                         "TASK-49.r1")
+        other = {**self.record, "artifact_dir": str(self.root / "elsewhere")}
+        self.assertEqual(self.run_record(other).returncode, 0)  # same name, other folder: the first run keeps it
+        moved = self.root / "elsewhere" / "TASK-49.r1"
+        self.assertEqual(json.loads(Path(f"{moved}.dispatch.json").read_text())["hook_env"]["ORCH_REPLY_TARGET"],
+                         f"{moved}.dispatch.json")
+        self.assertEqual(link.resolve(), self.artifact("dispatch.json"))
+        self.env["CLAUDE_CODE_SESSION_ID"] = "../escape"
+        self.assertEqual(self.run_record({**self.record, "run": 2}).returncode, 0)
+        self.assertEqual(self.probe(run=2)["reply_target"], str(self.artifact("dispatch.json", run=2)))
 
     def test_lead_inbox_reaches_only_the_hook_names_and_the_record_redacts_the_token(self):
         self.env.update(CLAUDE_CODE_MESSAGING_SOCKET="/tmp/lead.sock", CLAUDE_CODE_MESSAGING_TOKEN="secret-token")
         self.assertEqual(self.run_record().returncode, 0)
         probe = self.probe()
         self.assertEqual(probe["inbox"], {"ORCH_LEAD_SOCKET": "/tmp/lead.sock", "ORCH_LEAD_TOKEN": "secret-token"})
-        self.assertIn('shell_environment_policy.exclude=["CLAUDE_CODE_MESSAGING_*", "ORCH_LEAD_*"]', probe["argv"])
+        self.assertIn('shell_environment_policy.exclude=["CLAUDE_CODE_MESSAGING_*", "ORCH_LEAD_*", "CLAUDE_CODE_SESSION_ID"]',
+                      probe["argv"])
         text = self.artifact("dispatch.json").read_text()
         self.assertNotIn("secret-token", text)
         self.assertEqual(json.loads(text)["hook_env"]["ORCH_LEAD_TOKEN"], "<redacted>")

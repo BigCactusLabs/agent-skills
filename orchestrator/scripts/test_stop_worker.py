@@ -41,7 +41,10 @@ class StopWorkerTests(unittest.TestCase):
         binary.mkdir()
         (binary / "codex").write_text(FAKE)
         (binary / "codex").chmod(0o755)
-        self.env = {**os.environ, "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}"}
+        # The lead's own inbox and session must not leak in; TMPDIR keeps the run registry inside the test.
+        self.env = {**{k: v for k, v in os.environ.items()
+                       if not k.startswith(("CLAUDE_CODE_MESSAGING", "CLAUDE_CODE_SESSION_ID"))},
+                    "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}", "TMPDIR": str(self.root)}
         (self.root / "brief.md").write_text("Work until stopped.\n")
         self.record = {
             "task": "TASK-7", "run": 1, "brief_revision": 1, "action": "start",
