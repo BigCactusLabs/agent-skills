@@ -1,30 +1,27 @@
-# Pull requests, issues, and discussions
+# PRs, issues, and discussions
 
-Capability baseline: September 19, 2026, `gh` v2.101.0. For API calls, read [CLI and API](cli-and-api.md) for headers and pagination.
+API conventions: [CLI/API](cli-and-api.md).
 
-## Creation and worktrees
+## Worktrees and cleanup
 
-- Create PRs with `gh pr create --base <base> --head <head> --title "<title>" --body-file <file>`. Use `--body-file` for multiline review text too: `gh pr review <number-or-url> --approve|--comment|--request-changes --body-file <file>`.
-- Isolated checkout: `gh pr checkout <number-or-url> --worktree <path>` (v2.98+) or `gh issue develop <number> -R owner/repo --checkout --worktree <path>` (v2.99+). A non-empty target is rejected before branch creation; an existing linked worktree is reused.
-- Issue types, sub-issues, and dependencies: `gh issue edit <number>` with `--type`, `--add-sub-issue`, or `--add-blocking` (mutations).
-- Natural-language issue search: `gh search issues --search-type semantic|hybrid <query>` (v2.98+).
-- Resolve conflict markers, stage specific files, continue, and verify. Check merged branches before authorized deletion, then `git fetch --prune`.
-- `gh repo sync` refuses a branch checked out in another linked worktree. `gh pr merge --delete-branch` skips local cleanup on a dirty worktree but still deletes the remote branch. Read [stacks.md](stacks.md) before merging a stacked PR.
+`gh pr checkout <PR> --worktree <path>` and `gh issue develop <issue> --checkout --worktree <path>` reject non-empty targets before branch creation and reuse existing linked worktrees. `gh repo sync` refuses branches checked out elsewhere.
 
-## Reviews and threads
+Check merged state before authorized branch deletion. `gh pr merge --delete-branch` still deletes the remote branch when dirty local cleanup is skipped. For stacked PRs, read [Stacks](stacks.md).
 
-`gh pr view --json` exposes `reviews`, `latestReviews`, and `comments`, but not `reviewThreads`. Read `reviewDecision,latestReviews` and identify approvers by login. Opted-in repositories can count Copilot approvals toward required reviews; they are dismissed on new commits. `APPROVED` does not prove human approval; Copilot uses `copilot-pull-request-reviewer`.
+## Reviews
 
-Read `reviews[].body` with `gh pr view --json reviews` as well as inline comments. Copilot's overview can contain “Previously missed” findings without separate inline comments. Rereviews can auto-resolve threads, including “Won't Fix” or “Incorrect” outcomes: resolution alone does not prove a code fix. Refresh thread state after rereviews.
+Read `gh pr view --json reviewDecision,latestReviews,reviews` and inspect author logins and review bodies. Copilot (`copilot-pull-request-reviewer`) can count toward required approval in opted-in repos; new commits dismiss its approval. `APPROVED` does not prove human approval.
 
-For line-level comments only, use `gh api repos/OWNER/REPO/pulls/NUMBER/comments --paginate`. For thread IDs and resolved state, use GraphQL with `$endCursor: String` and this selection inside `repository { pullRequest(number: $number) { ... } }`:
+Copilot overview findings may have no inline comment. Rereviews can auto-resolve threads, including “Won't Fix”/“Incorrect”; refresh state and verify fixes independently of resolution.
+
+PR JSON has no `reviewThreads`. REST `repos/OWNER/REPO/pulls/NUMBER/comments --paginate` gives line comments; for thread IDs/state, select inside GraphQL `repository { pullRequest(number: $number) { ... } }` with `$endCursor: String`:
 
 ```graphql
 reviewThreads(first: 100, after: $endCursor) {
   nodes {
-    id isResolved isOutdated path line originalLine
+    id isResolved isOutdated path line
     comments(first: 20) {
-      nodes { author { login } body url createdAt path line originalLine }
+      nodes { author { login } body url }
       pageInfo { hasNextPage endCursor }
     }
   }
@@ -32,22 +29,18 @@ reviewThreads(first: 100, after: $endCursor) {
 }
 ```
 
-The outer cursor does not paginate each thread's comments. Follow each nested `comments.pageInfo` separately using the thread `id` and its comment cursor. For authorized resolution, pass that ID as `threadId` to `resolveReviewThread` or `unresolveReviewThread`, then re-query `isResolved`.
+Paginate each nested `comments` connection by thread ID and its own cursor. Authorized `resolveReviewThread` / `unresolveReviewThread` takes `threadId`; re-query `isResolved` afterward.
 
-## Missing objects and discussions
+## Missing objects
 
-If PR/issue view fails, query `repos/OWNER/REPO/pulls/NUMBER` and `repos/OWNER/REPO/issues/NUMBER` with `gh api --include`. They share a number namespace. Distinguish wrong object type, redirects, permissions, and missing/deleted objects.
+PRs/issues share numbers: on failed views, query both `repos/OWNER/REPO/pulls/NUMBER` and `repos/OWNER/REPO/issues/NUMBER` with `gh api --include` to distinguish type, redirects, access, and deletion.
 
-An admin-archived PR is closed and locked, and returns 404 to non-admins. Check admin access or `is:archived` search before declaring it gone. v2.101.0 exposes neither an archived PR JSON field nor a `--state archived` filter.
+Admin-archived PRs are closed/locked but return 404 to non-admins. Check admin access or `is:archived` search; the audited CLI lacks an archived PR JSON field/`--state archived`.
 
-`gh discussion view <number-or-url>` (preview) also accepts comment IDs/URLs. Use `--comments` or `--json <fields>` separately; JSON comments do not provide the full paginated thread. For unexposed fields, use GraphQL `repository(owner:, name:) { discussion(number:) { title bodyText url category { name } isAnswered } }`. If unresolved, check `gh repo view OWNER/REPO --json hasDiscussionsEnabled,url`.
+Discussion JSON omits full thread pagination; use GraphQL for complete threads/unexposed fields. If unavailable, check repository `hasDiscussionsEnabled`.
 
-## Media attachments
+## Attachments
 
-`--attach <path>[#alt text]` on `gh issue create|edit|comment` and `gh pr create|edit|comment` (v2.99+) uploads a user asset. It requires push access and explicit user intent; GHES is unsupported.
+`--attach <path>[#alt text]` requires push access and explicit intent; GHES is unsupported. Check command help and account upload limits; Free-plan video limits can be lower than the CLI cap. Videos have no alt text.
 
-- Images: `.png .jpg .jpeg .gif .webp .svg`, up to 10 MB each. Videos: `.mp4 .mov .webm`, client cap 100 MB; Free-plan server cap 10 MB. Maximum 50 attachments; no video alt text.
-- With `--body-file`, matching `![alt](./local.png)` references become uploaded URLs and retain alt text; unreferenced files are appended.
-- Partial upload failure still creates the issue/PR/comment with successful files and prints its URL, but exits nonzero. Inspect that object before retrying to avoid duplicates.
-
-Example: `gh pr comment <number> --body-file <file> --attach './shot.png#alt text'`.
+With `--body-file`, matching local image references become uploaded URLs with their alt text; unmatched files append. Partial upload failure can create the object with successful files, print its URL, and exit nonzero. Inspect that object before retrying to avoid duplicates.

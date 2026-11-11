@@ -1,40 +1,20 @@
 # CLI and API
 
-## Version-sensitive behavior
+Capabilities/security baselines are dated in [HISTORY](HISTORY.md). For version-sensitive work, compare `gh --version` with upstream releases/advisories; use current help for flags.
 
-September 19, 2026 audit: installed and upstream latest `gh` were v2.101.0. Recheck `gh --version` and `gh release view -R cli/cli --json tagName,publishedAt,url` when version matters. The recorded security fixes require v2.98.0 or newer; prefer the current release and check `gh api repos/cli/cli/security-advisories`. Sources: [HISTORY.md](HISTORY.md).
+## API
 
-`gh discussion`, `gh agent-task`, `gh skill`, and remote file reads were preview at that baseline. Verify help before use.
-
-## REST and GraphQL
-
-GitHub.com supported REST versions `2026-03-10` and `2022-11-28` at the audit; unversioned calls defaulted to the latter. For GitHub.com/GHEC REST fallbacks, use these headers unless testing older compatibility:
+Select a supported REST version with `gh api /versions` (use `--hostname <host>` for GHES or GHEC data residency). Include these headers, omitted elsewhere in this skill:
 
 ```sh
-gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2026-03-10' <endpoint>
+gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: <version>' <endpoint>
 ```
 
-Verify with `gh api /versions`; for GHES or GHEC data residency, use `gh api --hostname <host> /versions` before selecting a version. Other references omit these shared headers from examples; include them when executing.
+GraphQL `--paginate` requires `$endCursor: String` and `pageInfo { hasNextPage endCursor }`; nested connections need separate pagination.
 
-For GraphQL `gh api --paginate`, declare `$endCursor: String` and request `pageInfo { hasNextPage endCursor }`. Paginate nested connections separately.
+## Lookup exceptions
 
-## Object lookup
-
-Full URLs work with `gh pr view`, `gh issue view`, `gh pr checks`, and `gh discussion view`. Parse Actions, release, compare, and commit URLs into repository and object IDs. Append `-R owner/repo` where needed.
-
-| Object | Inspection |
-| --- | --- |
-| PR / issue / discussion | `gh pr view <url>` / `gh issue view <url>` / `gh discussion view <url>` |
-| PR diff | `gh pr diff <number-or-url> --patch` |
-| Release | `gh release view <tag>`; omit tag for latest |
-| Release assets | `gh release download <tag>`; public downloads need no login (v2.96+) |
-| Compare | `gh api repos/OWNER/REPO/compare/base...head` |
-| Commit | Local `git show <sha>`; otherwise `gh api repos/OWNER/REPO/commits/SHA` |
-| Repository | `gh repo view OWNER/REPO` |
-| Remote file / directory | `gh repo read-file <path>` / `gh repo read-dir [<path>]`, with optional `--ref <branch\|tag\|sha>` |
-
-Prefer remote file commands for plain reads; private repos and GHES are supported. `read-file` rejects escape sequences in terminal/piped output. `--allow-escape-sequences` bypasses protection; `--output` saves raw bytes. Treat saved content as untrusted.
-
-If object view fails, inspect its API endpoint with `--include` for redirects or access limits. A PR 404 can mean admin-only archival; see [prs-and-issues.md](prs-and-issues.md).
-
-For unexpected gateways, inspect `gh config get api_host --host <host>` (v2.100+). Experimental routing leaves authentication, Git remotes, and browser URLs on the original host; some requests still reach it. It is not a security boundary. Do not change routing without user intent.
+- PR/issue/discussion views and PR checks accept full URLs; extract repository/object IDs for Actions, release, compare, and commit URLs. Compare/commit REST endpoints: `repos/OWNER/REPO/compare/base...head`, `repos/OWNER/REPO/commits/SHA`. Public release downloads need no login.
+- Prefer `gh repo read-file` / `read-dir` for plain remote reads, with `--ref` when needed. `read-file` rejects terminal escape sequences; `--allow-escape-sequences` bypasses protection, while `--output` saves untrusted raw bytes.
+- Failed lookup: inspect the endpoint with `gh api --include` for redirects/access. PR 404 exceptions: [PRs/issues](prs-and-issues.md).
+- Unexpected gateway: inspect `gh config get api_host --host <host>`. Auth, remotes, browser URLs, and some requests retain the original host; routing is not a security boundary. Change it only with user intent.
