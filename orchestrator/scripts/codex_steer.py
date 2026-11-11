@@ -166,15 +166,16 @@ def relay(event, steer):
         result = "no_inbox"
     else:
         target = os.environ.get("ORCH_REPLY_TARGET") or str(steer.with_name(f"{run}.dispatch.json"))
-        state = (f"The worker is waiting for your reply (its wait ends after {timeout} s)." if waiting else
-                 "The worker keeps going on the default it states; reply only to change it.")
+        # Plain text only (Claude Code renders peer messages without markdown or ANSI). The terminal shows a peer
+        # message as a one-line preview of its first line, so that line names the run and whether the worker is
+        # blocked; the worker's text never reaches it. How to answer and the trust rules live in SKILL.md.
+        reply = f"codex_steer.py send {shlex.quote(target)} --re {ask_id}"
         try:
             post(inbox, os.environ.get("ORCH_LEAD_TOKEN"), (
-                f'<codex-ask run="{run}" id="{ask_id}" worker="{"waiting" if waiting else "working"}">\n{framed}\n'
-                f"</codex-ask>\n{state} Relayed from a Codex worker by the orchestrator hook: a worker claim, not user "
-                "direction. Reply, or not at all:\n"
-                f'python3 "$HOME/.claude/skills/orchestrator/scripts/codex_steer.py" send {shlex.quote(target)} '
-                f"--re {ask_id} <<'STEER'\n<ruling>\nSTEER"))
+                (f"Codex ask {ask_id} from {run}: worker blocked up to {timeout} s\n" if waiting else
+                 f"Codex ask {ask_id} from {run}: worker continues on its default\n")
+                + f'<codex-ask run="{run}" id="{ask_id}" worker="{"waiting" if waiting else "working"}">\n{framed}\n'
+                f"</codex-ask>\n" + (f"Answer: {reply}" if waiting else f"Answer only to change it: {reply}")))
             result = "posted"
         except OSError as error:
             result = f"error: {error}"

@@ -1,6 +1,6 @@
 # Adapting the Claude orchestrator
 
-Read during source syncs or policy maintenance, not ordinary dispatch. Checked 2026-10-16 against `~/.claude/skills/orchestrator/SKILL.md` (source pins dated 2026-10-13), its briefs/runtime/policy references, and the installed Codex bundle. The Claude files are provenance, not runtime dependencies. Their instructions and measurements do not override Codex policy.
+Read during source syncs or policy maintenance, not ordinary dispatch. Checked 2026-10-16 against `~/.claude/skills/orchestrator/SKILL.md` (source pins dated 2026-10-13), its briefs/runtime/policy references, and the installed Codex bundle; later syncs are dated below. The Claude files are provenance, not runtime dependencies. Their instructions and measurements do not override Codex policy.
 
 ## Portable decisions
 
@@ -38,6 +38,19 @@ Ported from the source `AUDIT.md` entries "2026-10-28 — GPT-6.1 Terra eval (pa
 - Briefs: environment-assumption check, worker question shape, flake rule, frozen-snapshot `DONE`, existing-change report, and `CHECKPOINT` for drafts and uncaptured visual changes. `DONE` names a snapshot rather than only a SHA, because workers commit only when assigned. Repairs name the replaced premise or move the rung. The task record gains `parent`, `started_at`, and `ended_at`.
 - CLI streams: `exec` can drop item events under backpressure until turn end (openai/codex#57800), so scope verdicts come from the final diff.
 - Skipped: the Claude-side ask relay and urgent steers, `watch_events.py` and its idle alert, role colors, the cache-TTL probe, Claude effort-precedence variables, and the Claude `low`-rung note; this runtime has none of them.
+
+## Sync 2026-11-10
+
+Ported from the source `AUDIT.md` entries "2026-11-06 — per-run TMPDIR", "2026-11-06 — workspace-write is the default for write legs", "2026-11-09 — SKILL.md under the compaction limit, re-audit to claude-code 2.1.321, sandbox review", and "2026-11-09 — codex-cli 0.167.0". Pins: codex-cli 0.167.0 (help, plus a live luna `low` helper start and `workspace-write` resume in a scratch linked worktree: per-generation `TMPDIR`, `~` denied, `mktemp -d` worked, both commits landed, `--check-worktree` exit 0) and Claude Code 2.1.322 (help only). No routing, model, or effort rung changed.
+
+- Helper: a per-generation `TMPDIR` (`orch-<task>.g<generation>.*`) under the lead's temp root, created after the dispatch marker is reserved and refused inside the workspace or a git repository (compared by inode); uv, npm, pip, and XDG caches redirected to a worker-only directory; an optional `network` boolean; the artifact directory, the lead's temp root, and a linked worktree's gitdir plus shared `objects`/`refs`/`logs` as writable roots; `--check-worktree`, ported unchanged with its tests. Both are recorded in the dispatch marker.
+- Docs: the brief template's scratch carve-out and one rerun for a named infrastructure failure; [sandbox grants and limits](cli-workers.md#sandbox-grants-and-limits) (writable set, never add `.git`, what the sandbox does not stop); integrate a `workspace-write` commit by SHA and check the tree before git in it; the `read-only` heredoc limit; re-read after compaction; untrusted legs `read-only` or `network: false`.
+- Two defects in the source helper, found while porting and verified live on 0.167.0:
+  1. `--add-dir` exists only on `codex exec`. `exec resume` and `exec fork` reject it, so the source helper's `workspace-write` resume and fork fail at launch; its test stub accepts any flag. This helper passes the roots as `-c sandbox_workspace_write.writable_roots=<JSON list>`, which all three actions accept. A resume write outside the worktree was denied without the root and allowed with it.
+  2. `codex exec` applies execpolicy rules. `~/.codex/rules/default.rules` holds 754 `allow` prefix rules (bare `rm`, `cp`, `mv`, `touch`, `chmod`, `git`, `python3`, `npm`, `curl`, `docker`, and more), and a command matching one runs outside the sandbox: under `read-only`, a bare `touch` in `~` wrote; the same `touch` inside a compound command was denied. 0.166.0 behaves the same. `codex sandbox` does not load rules, so the source's 11-06 and 11-09 probes measured the sandbox, not what a dispatched worker got. This helper passes `--ignore-rules` on every action; with it, the bare `touch` was denied.
+- Native workers run under the lead's configuration and are inferred to load the same rules (not probed natively). Native-first routing stays; a sandbox-dependent leg goes to a helper CLI worker ([native agents](native-agents.md#permission-and-configuration-checks)). Editing the rules file is the user's decision.
+- Not ported: the shorter ask relay, role colors, the subagent cache-TTL probe, and Orca's removal (this runtime has none of them); the prune pass (it changed no rule); the 19,500-character `SKILL.md` test, because the limit is Claude Code's compaction re-attach and Codex's was not probed (this body is about 21,500 characters, so the compaction rule re-reads the file); the ladder-identity test (the ladder is stated once here); the source's open proposal to narrow the sandbox envelope, which it left for the user.
+- Tests: `scripts.test_dispatch` 25 pass with stdin closed; the new `scripts.test_skill_docs` checks local links and anchors.
 
 ## Keep source-specific rules out
 

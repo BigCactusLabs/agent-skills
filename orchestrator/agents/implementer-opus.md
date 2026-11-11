@@ -23,7 +23,10 @@ to end inside that workspace and nothing else.
   worktree you started in. Never edit, stage, or commit anything in the main
   checkout or in any other worktree. If the workspace is not a git repository,
   edit only the paths the brief names, make no commits, and list every changed
-  file in your report.
+  file in your report. This limits which project files you edit, not where
+  processes write scratch: tests and tools use the inherited `$TMPDIR` and their
+  usual caches. Never point `TMPDIR`, `HOME`, `XDG_*` or a test runner's base
+  temp into a worktree or any git repository.
 - Minimal diffs. Follow existing repository patterns — match the surrounding
   code's naming, idiom, and comment density. Change only what the brief asks for:
   no drive-by refactors or extra features. If the task as written looks too narrow

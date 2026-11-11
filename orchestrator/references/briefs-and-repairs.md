@@ -1,6 +1,6 @@
 # Briefs, repairs, and task state
 
-Read the worker-brief section before dispatch. Read the behavior and repair sections when a task changes interacting state rules in a silent-failure domain. Read the task-record section for any repair or recovery after compaction. Small enumerated changes keep the ordinary brief; this reference does not add a plan reviewer or another agent by default.
+Read the worker-brief section before writing a brief. Read the behavior and repair sections when a task changes interacting state rules in a silent-failure domain. Read the task-record section for any repair or recovery after compaction. Small enumerated changes keep the ordinary brief; this reference does not add a plan reviewer or another agent by default.
 
 ## Worker brief
 
@@ -12,7 +12,7 @@ Task/revision: [stable task ID, current brief revision, run]
 Goal: [one concrete result and why it is needed]
 Workspace/base: [absolute worktree path, branch/base SHA, relevant dirty state]
 Readiness: [verified setup result and required environment/assets]
-Ownership: [exclusive paths; read-only or write-capable]
+Ownership: [exclusive repo paths; read-only or write-capable; never "write only under X" without the scratch carve-out below]
 Shared resources: [lockfiles, generated outputs, ports/caches; their owners]
 Inputs: [essential facts and paths to decisions, failed approaches, and evidence]
 Contract: [shared authoritative path/revision; relevant behavior rules]
@@ -22,7 +22,12 @@ Acceptance: [contract-derived expected cases and verified commands]
 Verification owners: [implementer's regression cases and existing harness; integration owner]
 Reports: [run-specific paths; who returns content and who saves it]
 
-Stay within the assigned ownership. Other agents may be editing nearby files;
+Stay within the assigned ownership. Ownership limits which repository files
+you edit; it does not cover process scratch. Tests and tools may write to
+$TMPDIR (a private directory outside every repository), their usual caches,
+and your report path. Never point TMPDIR, HOME, XDG_* or a test runner's
+base temp into a worktree or any git repository. If a sandbox denies a write
+you need, ask; do not relocate it. Other agents may be editing nearby files;
 do not revert their work. No shared-checkout staging or commits. No push,
 deploy, external messages, PR mutations, force-push, history rewrite,
 `reset --hard`, branch deletion, or `rm -rf` outside your own worktree.
@@ -121,7 +126,7 @@ First classify the findings: implementation defect, contract decision, integrati
 
 Choose the smallest change that satisfies each accepted finding. When a reviewer offers “A or B,” select one adequate remedy and record why; do not silently require both, and tell the worker that the chosen remedy is the whole requirement. Removing an unsupported claim may be enough; adding a mechanism creates new behavior to specify and review. Optional capability is a separate scope choice, not automatic repair work.
 
-Name the premise the last attempt got wrong (an environment fact, a contract reading, a data shape) and what replaces it. A repair brief that resends the same findings on the same premise reproduces the fault; when no premise changed, move the rung instead (SKILL.md, ladders).
+Name the premise the last attempt got wrong (an environment fact, a contract reading, a data shape) and what replaces it. A repair brief that resends the same findings on the same premise reproduces the fault; when no premise changed, move the rung instead ([ladders and stepping](routing.md#ladders-and-stepping)).
 
 For each accepted defect, include:
 
@@ -136,7 +141,7 @@ When a repair adds a code path, state transition, or shared validation, settle i
 
 ## Verification and review brief
 
-Use independent review at a coherent milestone when changed risk and uncertainty justify it. A milestone can contain several small, self-contained changes; do not defer review of a consequential mechanism until a large batch is complete. Consequential persistence, concurrency, security, and live-write changes retain independent scrutiny when available; preserve required repository and user-requested reviews. Diff size can signal breadth, but a line-count threshold alone does not require a review.
+The reviewer comes from the other model family than the author. The second family buys independent coverage, not accuracy: on code a fresh same-model reviewer scored as well, a same-session second pass scored significantly worse, and one of each caught the most (`REFERENCE.md`, frontier pass evidence). So when the other family is unavailable the fallback is a fresh same-model reviewer, never the author's session. Use independent review at a coherent milestone when changed risk and uncertainty justify it. A milestone can contain several small, self-contained changes; do not defer review of a consequential mechanism until a large batch is complete. Consequential persistence, concurrency, security, and live-write changes retain independent scrutiny when available; preserve required repository and user-requested reviews. Diff size can signal breadth, but a line-count threshold alone does not require a review.
 
 Re-review a repair when it introduces material behavior or risk outside the reviewed scope, changes a shared invariant, or leaves an accepted finding unresolved. An enumerated validation fix can close through the lead's diff review and targeted checks that directly establish required behavior. A persisted-write retry change needs scrutiny of duplicate writes, uncertain outcomes, and unsafe retries even if its diff is small. A new branch or error label alone does not require another reviewer. Do not request a review solely for confirmation, to reset a counter, or for each internal phase. Fewer rounds never justify accepting a material defect.
 

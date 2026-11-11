@@ -107,5 +107,14 @@ class WatchEventsTests(unittest.TestCase):
         self.assertEqual(out.splitlines(), [f"TASK-3.r2: worker process {gone.pid} exited without a turn end"])
 
 
+    def test_a_turn_end_left_unterminated_by_an_exited_worker_is_still_read(self):
+        gone = subprocess.Popen(["true"])
+        gone.wait()
+        self.dispatch.write_text(json.dumps({"pid": gone.pid, "artifacts": {"events": str(self.events)}}))
+        self.events.write_text(json.dumps({"type": "turn.started"}) + "\n" + json.dumps({"type": "turn.completed"}))
+        out, _ = self.watch("--from-offset", "0").communicate(timeout=10)
+        self.assertEqual(out.splitlines(), ["TASK-3.r2: turn ended: turn.completed"])
+
+
 if __name__ == "__main__":
     unittest.main()

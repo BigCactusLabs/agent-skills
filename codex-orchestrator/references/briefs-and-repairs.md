@@ -10,7 +10,12 @@ Put stable shared constraints first and task-specific inputs last. This makes si
 
 ```text
 Role: bounded worker; Astra remains the orchestrator. Do not spawn agents.
-Stay within the assigned ownership. Other agents may be editing nearby files;
+Stay within the assigned ownership. Ownership limits which repository files
+you edit; it does not cover process scratch. Tests and tools may write to
+$TMPDIR (outside every repository; private to a CLI worker), their usual caches,
+and your report path. Never point TMPDIR, HOME, XDG_* or a test runner's
+base temp into a worktree or any git repository. If a sandbox denies a write
+you need, report it; do not relocate it. Other agents may be editing nearby files;
 do not revert their work. No shared-checkout staging or commits. No push,
 deploy, external messages, PR mutations, destructive cleanup, history rewrite,
 or permission bypass. If needed, report ESCALATE with the exact action/reason.
@@ -34,7 +39,8 @@ real exit status. Supervise the same process until it exits; do not report DONE
 while an owned check is still running. Never rerun for an output tail or while
 the earlier check may still run. A check that fails on its own verdict reruns
 once at the same tree: a pass is a flake to report, a second failure is real,
-and a rerun on the base is never a way to get a green. A raised timeout or a
+and a rerun on the base is never a way to get a green. One named infrastructure
+failure may rerun once per task; state it in the report. A raised timeout or a
 weakened assertion is a ruling to request, not a fix. Report the actual tested
 snapshot, including dirty/untracked inputs. Report missing prerequisites once;
 do not guess setup.
@@ -67,7 +73,7 @@ Task/revision: [stable task ID, current brief revision, turn generation]
 Goal: [one concrete result and why it is needed]
 Workspace/base: [absolute path, branch/base SHA, relevant dirty state]
 Readiness: [verified setup result and required environment/assets]
-Ownership: [exclusive paths; read-only or write-capable]
+Ownership: [exclusive paths; read-only or write-capable; never "write only under X" without the scratch carve-out above]
 Shared resources: [lockfiles, generated outputs, ports/caches; their owners]
 Dependencies: [producer artifact/revision, stable interface, condition for starting]
 Peers: [none, or verified messaging capability, exact handles, scope, no-reply deadline]

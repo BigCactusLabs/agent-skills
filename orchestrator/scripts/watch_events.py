@@ -102,7 +102,7 @@ def main():
     label, events, pid = args.dispatch.name.removesuffix(".dispatch.json"), Path(record["artifacts"]["events"]), record["pid"]
     start = args.from_offset if args.from_offset is not None else (events.stat().st_size if events.exists() else 0)
     watch, buffer, offset, position = Watch(args.own, args.repeat, args.idle_items), b"", 0, 0
-    last_event, stalled = time.monotonic(), False
+    last_event, stalled, exited = time.monotonic(), False, False
     while True:
         try:
             with events.open("rb") as stream:
@@ -112,6 +112,8 @@ def main():
         except FileNotFoundError:
             chunk = b""
         *lines, buffer = (buffer + chunk).split(b"\n")
+        if exited and buffer:  # the writer is gone, so a last line without a newline is complete
+            lines, buffer = [*lines, buffer], b""
         for line in lines:
             position += len(line) + 1
             old = position <= start
@@ -130,9 +132,12 @@ def main():
                 if old:
                     print(f"{label}: turn already ended before the watch started", flush=True)
                 return 0
-        if not running(pid):
+        if exited:
             print(f"{label}: worker process {pid} exited without a turn end", flush=True)
             return 0
+        if not running(pid):
+            exited = True  # read once more: the turn end can land between the read above and this check
+            continue
         if not stalled and time.monotonic() - last_event >= args.stall_seconds:
             stalled = True
             print(f"{label}: no new event for {args.stall_seconds:g}s", flush=True)

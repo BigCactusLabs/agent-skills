@@ -46,9 +46,10 @@ class StopWorkerTests(unittest.TestCase):
                        if not k.startswith(("CLAUDE_CODE_MESSAGING", "CLAUDE_CODE_SESSION_ID"))},
                     "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}", "TMPDIR": str(self.root)}
         (self.root / "brief.md").write_text("Work until stopped.\n")
+        (self.root / "worktree").mkdir()  # dispatch refuses a workspace that contains the temp root
         self.record = {
             "task": "TASK-7", "run": 1, "brief_revision": 1, "action": "start",
-            "workspace": str(self.root), "brief": str(self.root / "brief.md"),
+            "workspace": str(self.root / "worktree"), "brief": str(self.root / "brief.md"),
             "artifact_dir": str(self.root / "artifacts"), "model": "gpt-6-luna",
             "effort": "max", "permission_mode": "read-only",
         }

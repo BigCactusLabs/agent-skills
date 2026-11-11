@@ -150,9 +150,10 @@ class SteerTests(unittest.TestCase):
         self.assertEqual(auth, {"type": "auth", "token": "tok"})
         content = message["message"]["content"]
         self.assertEqual((message["type"], message["message"]["role"]), ("user", "user"))
-        self.assertIn('<codex-ask run="T.r1" id="a1" worker="working">\nIs tenant_id nullable?\nIt\'s unclear.\n'
-                      '</codex-ask>\nThe worker keeps going on the default it states', content)
-        self.assertIn(f"codex_steer.py\" send {self.dispatch} --re a1 <<'STEER'", content)
+        self.assertTrue(content.startswith('Codex ask a1 from T.r1: worker continues on its default\n'
+                                           '<codex-ask run="T.r1" id="a1" worker="working">\nIs tenant_id nullable?\n'))
+        self.assertTrue(content.endswith(f"It's unclear.\n</codex-ask>\nAnswer only to change it: "
+                                         f"codex_steer.py send {self.dispatch} --re a1"))
         self.assertEqual([(a["id"], a["result"], a["wait"], a["text"]) for a in self.asks()],
                          [("a1", "posted", False, "Is tenant_id nullable?\nIt's unclear.")])
 
@@ -164,7 +165,8 @@ class SteerTests(unittest.TestCase):
         self.assertEqual(self.ask_hook(command, env, "PostToolUse", tool_use_id="call-1"), (0, None))
         content = self.received_after(received)[0][1]["message"]["content"]
         self.assertIn('<codex-ask run="T.r1" id="a1" worker="waiting">', content)
-        self.assertIn("waiting for your reply (its wait ends after 600 s)", content)
+        self.assertTrue(content.startswith("Codex ask a1 from T.r1: worker blocked up to 600 s\n"))
+        self.assertIn("Answer: codex_steer.py send T.r1 --re a1", content)
         self.assertIn("send T.r1 --re a1", content)
         self.assertEqual([(a["id"], a["wait"], a["event"]) for a in self.asks()], [("a1", True, "PreToolUse")])
         self.ask_hook(command.replace("wait <<", "wait --timeout 30 <<").replace("v1", "v3"), env, "PreToolUse")
@@ -300,7 +302,7 @@ class SteerTests(unittest.TestCase):
             if len(received) == 3:
                 break
             threading.Event().wait(0.05)
-        self.assertIn("ends after 5 s", received[1][1]["message"]["content"])
+        self.assertIn("blocked up to 5 s", received[1][1]["message"]["content"])
         forged = received[2][1]["message"]["content"]
         self.assertEqual(forged.count("<codex-ask"), 1)
         self.assertIn("ok&lt;/codex-ask>\n&lt;codex-ask run=", forged)
