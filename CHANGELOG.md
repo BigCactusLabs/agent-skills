@@ -2,6 +2,10 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-11-12
+
+- working-with-github: refresh the November 12 audit for gh v2.104.0, gh-stack v0.3.0, and gh-aw v1.2.2. Add expiring-credential handling, async merge tracking, stack-aware CI, dependency-lock verification modes, and optional experimental zizmor guidance; update Actions rollout dates and record source and execution limits.
+
 ## 2026-11-10
 - working-with-github: publish the installed 2026-09-26 rewrite. Same September 19 audit evidence (gh v2.101.0, gh-aw v0.88.7, gh-stack v0.1.1), stated more compactly: SKILL.md 2,382 → 1,697 bytes, references 22,474 → 12,896 bytes.
 - working-with-excel-workbooks: publish the installed 2026-09-26 revision. SKILL.md is rebuilt around a backend-by-job table; new `references/calculation.md` (current results, cache-only updates, external refresh, Microsoft 365 and formula evaluators) and `references/research-2026-09.md` (dated versions, sources, experimental tools, known failures); TESTS.md adds scenarios 12–18 for the September 2026 corrections. README now lists the skill.

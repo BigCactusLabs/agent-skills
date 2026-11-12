@@ -1,6 +1,6 @@
 # GitHub agents
 
-`gh agent-task` runs Copilot cloud tasks; `gh skill` manages skills; extension `gh aw` manages Actions automations. All were preview at the [audit](HISTORY.md). API conventions: [CLI/API](cli-and-api.md).
+`gh agent-task` runs Copilot cloud tasks; `gh skill` manages skills; both remain preview in the audited CLI. Extension `gh aw` manages Agentic Workflows, generally available on github.com since October 28, 2026. CLI and service maturity differ; check installed help and the [audit](HISTORY.md). API conventions: [CLI/API](cli-and-api.md).
 
 ## Copilot tasks
 
@@ -16,8 +16,8 @@ Noninteractive installs default to `github-copilot`, project scope. Set `--agent
 
 If `gh aw` is absent, inspect with `gh run` / `gh repo read-file`; do not install unprompted.
 
-Human-authored `.github/workflows/*.md` compiles to sibling `*.lock.yml`, the executed artifact. Inspect both for drift/tampering; runs use standard [Actions](actions.md) diagnosis. Ordinary compile writes locks; `gh aw compile --validate --no-emit` or `gh aw lint` validates without lock writes. Run/trial/deploy and other mutations require intent.
+Human-authored `.github/workflows/*.md` compiles to sibling `*.lock.yml`, the executed artifact. Inspect both for drift/tampering; runs use standard [Actions](actions.md) diagnosis. Ordinary compile writes locks; `gh aw compile --validate --no-emit` validates without emitting locks but can populate import caches. `gh aw lint` also checks native Actions YAML. Run/trial/deploy and other mutations require intent.
 
 Before trusting mutations, verify effective read permissions, integrity filtering, declared safe outputs, and threat results (`gh aw audit <run-id-or-url>` supplies run evidence). In v0.88.7, `report_incomplete` fails workflows despite agent-process success. Inspect that report before blaming infrastructure.
 
-Check installed/upstream versions for behavior changes: minors can break compatibility, and older builds incorrectly reported zero token usage. Migration evidence is in the audit.
+Before introducing recurring workflows, use `gh aw forecast` when available to estimate AI credits, including threat detection; it is an estimate, not a spending cap. Check installed/upstream versions and migration notes before changing compiled workflows; the pre-1.0 compatibility warnings and token-reporting bugs in the audit describe older builds.

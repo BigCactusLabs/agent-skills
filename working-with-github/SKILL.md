@@ -12,12 +12,12 @@ Use `gh` for GitHub and `git` for checkout/history. Resolve supplied URLs before
 - Check unfamiliar commands with `--help` and extensions with `gh extension list`; never install unprompted. Dated capabilities: [audit evidence](references/HISTORY.md).
 - Never change Git signing configuration; follow active attribution guidance.
 - Before/after rebase, conflict resolution, or branch deletion, inspect `git status` and `git log --oneline -n 10`. Verify outcomes beyond exit codes.
-- Use `--body-file` for multiline text; request `--comments` and `--json` separately.
+- Use `--body-file` for multiline text. For structured comments, select `--json ...,comments`; use `--comments` only for human-readable output.
 
 ## Read the relevant reference
 
-- [CLI/API](references/cli-and-api.md): API headers/pagination, versions, remote files, releases, URL lookup/routing.
-- [PRs/issues](references/prs-and-issues.md): reviews/threads, discussions, worktrees, attachments/retries.
-- [Actions](references/actions.md): checks, reruns, logs, permissions, cache, retention.
-- [Stacks](references/stacks.md): dependent PRs; never use `gh pr merge` on a stacked PR.
+- [CLI/API](references/cli-and-api.md): authentication, API headers/pagination, versions, remote files, URL lookup/routing, repository deletion.
+- [PRs/issues](references/prs-and-issues.md): merge checks/async API, reviews/threads, discussions, worktrees, attachments/retries, issue artifacts.
+- [Actions](references/actions.md): checks, reruns, logs, permissions, cache, retention, dependency lockfiles.
+- [Stacks](references/stacks.md): dependent PRs and stack-aware CI; never use `gh pr merge` on a stacked PR.
 - [Agents](references/agents.md): Copilot tasks, `gh skill`, Markdown workflows/lock files.
