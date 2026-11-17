@@ -2,6 +2,10 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-11-17
+- cm-orchestrator: new skill, the code-mode edition of orchestrator for a Claude Code lead whose tools are `REPL` and `Poll`. `SKILL.md` carries orchestrator's policy unchanged, under 20,000 characters; `references/code-mode.md` gives the script form of each mechanic: the awaited launch with a short timeout and its task handle, checked `{error}` results from built-in tool calls, the drain script, a bounded background wait for things that send no notification (a review bot, CI), which workers run in code mode, and script pitfalls. It reads orchestrator's references and scripts, so both are installed together. Checked on claude-code 2.1.326.
+- orchestrator: sync the 2026-11-10 → 2026-11-16 installed changes. New `scripts/compact_reread.py`, a `SessionStart` hook (matcher `compact`) that prints the re-read instruction after a compaction when the session invoked either edition, with tests in `test_hooks.py`. `routing.md` adds diagnosis legs: one read-only leg per hypothesis, then a refutation round. `policy-checks.md` adds rows for shared-list ownership, readiness checks before a harness-made worktree, cherry-picked worker branches, a refused `isolation: "worktree"`, small review findings going back to the branch owner, pushing the integration branch and opening the PR without asking, blanket landing grants, approved live read-only queries, and effort notes that conflict with the ladder. `SKILL.md`: drain pending events then act, and a report step that numbers what the user must do. The reviewer and researcher roles write their report by shell redirect when their tools are `REPL` and `Poll`. Agent teams are off by default and can now run with Code Mode (2.1.326).
+
 ## 2026-11-12
 
 - working-with-github: refresh the November 12 audit for gh v2.104.0, gh-stack v0.3.0, and gh-aw v1.2.2. Add expiring-credential handling, async merge tracking, stack-aware CI, dependency-lock verification modes, and optional experimental zizmor guidance; update Actions rollout dates and record source and execution limits.

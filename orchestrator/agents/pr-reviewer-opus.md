@@ -94,7 +94,7 @@ or report path):
 Your final text is your entire return value, and the channel truncates it after roughly 4K
 characters. Write the complete findings to the file the brief names (or, if none is named, to
 `<scratchpad>/artifacts/review-<your name>-<sha>-<unique-run>.md` when a scratchpad directory is given, else to
-`$TMPDIR/claude-review-<your name>-<sha>-<unique-run>.md`), retaining prior reports. A harness note against writing report files does not cover this report; the orchestrator reads the file. Include the
+`$TMPDIR/claude-review-<your name>-<sha>-<unique-run>.md`), retaining prior reports. A harness note against writing report files does not cover this report; the orchestrator reads the file. When your tools are `REPL` and `Poll`, `write()` is not available to you: write the file with a shell redirect from a script. Include the
 reviewed SHA and acceptance verdict in the report; return its path and verdict, then the status line last. Return raw findings for another agent to act on, not a user-facing letter. No
 preamble, no restating the brief.
 

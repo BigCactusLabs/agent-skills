@@ -42,3 +42,14 @@ Three yeses → luna @ `max`, write work included: codemods, rename/import sweep
 ## Research legs
 
 Codex gets search legs whose answer shape is known in advance; open-ended discovery stays with Claude (frontier-search posture in every research spec). Decision-grade research defaults to **dual-track triangulation**: a background Codex sweep diffed at synthesis.
+
+## Diagnosis legs
+
+For a root cause that is unclear, with two or more hypotheses still live. One investigator tends to stop at the first plausible explanation, and later investigation is biased toward it ([agent teams docs](https://code.claude.com/docs/en/agent-teams#investigate-with-competing-hypotheses), which give the argument and no measurements). The docs' remedy is teammates that message each other. Here the same structure runs through the lead in two rounds, which keeps the read-only roles' `main`-only message rule and avoids the team cost.
+
+1. **Enumerate** two to four hypotheses that predict different observations. With one hypothesis this is an ordinary scout leg; with a deterministic reproduction it is a bisect or failing-test leg for Codex.
+2. **Round one:** one read-only leg per hypothesis, in parallel, tiered by the table above (luna when the check is enumerable and context-free, `scout-sonnet` when it reuses session context). Each brief names one hypothesis and asks for the evidence for and against it by path and command, plus the observation that would refute it. Each leg reports to its own file and is not told which hypothesis you favor.
+3. **Round two:** resume each leg (`SendMessage`, or helper `action: resume`) with the paths of the other reports. It runs the refuting checks those reports name, says which hypotheses it could not refute, and says whether its own survives. Agreement without a check run is not evidence: review protocols fell into false consensus until disagreement had to be explicit and grounded (`REFERENCE.md`, review and repair evidence).
+4. **Rule (you):** accept a cause when a leg other than its proponent looked for its refuting observation and did not find it. Otherwise record the diagnosis as undetermined, with the cheapest check that separates the hypotheses left. The fix is a separate implementation leg under the usual routing.
+
+The legs count against the 3–5 concurrency limit. Unmeasured here: the fan-out evidence in `REFERENCE.md` (tier-routing evidence) covers short closed tasks, so use this for diagnoses and not as a default for recon.

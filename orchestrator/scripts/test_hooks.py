@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Probes for the status-contract and message-guard role hooks, run as the harness runs them."""
+"""Probes for the hooks that ship with the skill (status contract, message guard, compaction re-read), run as the harness runs them."""
 
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 
 
@@ -70,6 +71,59 @@ class MessageGuardTests(unittest.TestCase):
             with self.subTest(payload=payload):
                 code, output = run("message_guard.py", payload)
                 self.assertEqual((code, output["hookSpecificOutput"]["permissionDecision"]), (0, "deny"))
+
+
+
+class CompactRereadTests(unittest.TestCase):
+    SKILL_CALL = {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "name": "Skill", "input": {"skill": "orchestrator"}}]}}
+    SLASH = {"type": "user", "message": {"content":
+             "<command-message>cm-orchestrator</command-message>\n<command-name>/cm-orchestrator</command-name>"}}
+    REATTACHED = {"type": "attachment", "attachment": {"type": "invoked_skills", "skills": [
+        {"name": "cm-orchestrator", "path": "userSettings:cm-orchestrator"}]}}
+
+    def fire(self, records, source="compact", **extra):
+        with tempfile.TemporaryDirectory() as tmp:
+            transcript = Path(tmp) / "session.jsonl"
+            transcript.write_text("".join(json.dumps(record) + "\n" for record in records))
+            payload = {"hook_event_name": "SessionStart", "source": source, "transcript_path": str(transcript), **extra}
+            result = subprocess.run([sys.executable, str(HERE / "compact_reread.py")], input=json.dumps(payload),
+                                    capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 0)
+        return result.stdout
+
+    def test_each_invocation_record_prompts_the_reread(self):
+        for record, edition in ((self.SKILL_CALL, "orchestrator"), (self.SLASH, "cm-orchestrator"),
+                                (self.REATTACHED, "cm-orchestrator")):
+            with self.subTest(record=record["type"]):
+                output = self.fire([{"type": "user", "message": {"content": "hello"}}, record])
+                self.assertIn(f"invoked the {edition} skill", output)
+                self.assertIn("run manifest", output)
+                self.assertEqual("code-mode.md" in output, edition == "cm-orchestrator")
+        self.assertIn("cm-orchestrator and orchestrator", self.fire([self.SKILL_CALL, self.SLASH]))
+
+    def test_quoted_mentions_and_other_sessions_stay_silent(self):
+        quoted = '<command-name>/orchestrator</command-name> {"name": "Skill", "input": {"skill": "orchestrator"}}'
+        quiet = [
+            {"type": "user", "message": {"content": [{"type": "tool_result", "content": quoted}]}},
+            {"type": "assistant", "message": {"content": [{"type": "text", "text": quoted}]}},
+            {"type": "user", "message": {"content": "see " + quoted}},
+            {"type": "assistant", "isSidechain": True, "message": self.SKILL_CALL["message"]},
+            {"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "name": "Skill", "input": {"skill": "frontier-search"}}]}},
+            {"type": "attachment", "attachment": {"type": "skill_mention", "skillName": "orchestrator"}},
+        ]
+        self.assertEqual(self.fire(quiet), "")
+        self.assertEqual(self.fire([self.SKILL_CALL], source="resume"), "")
+        self.assertEqual(self.fire([self.SKILL_CALL], agent_id="a1", agent_type="implementer-opus"), "")
+
+    def test_unreadable_input_fails_open(self):
+        for raw in ("not json", "[]", '{"source": "compact"}',
+                    '{"source": "compact", "transcript_path": "/nonexistent/session.jsonl"}'):
+            with self.subTest(raw=raw):
+                result = subprocess.run([sys.executable, str(HERE / "compact_reread.py")], input=raw,
+                                        capture_output=True, text=True, timeout=5)
+                self.assertEqual((result.returncode, result.stdout), (0, ""))
 
 
 if __name__ == "__main__":
