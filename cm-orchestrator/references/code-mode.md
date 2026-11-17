@@ -134,4 +134,4 @@ Consequences:
 - To see drift: `diff <(sed 's#(references/#(../orchestrator/references/#g' ~/.claude/skills/orchestrator/SKILL.md) ~/.claude/skills/cm-orchestrator/SKILL.md`.
 - Both files must stay under 20,000 characters, because that is all Claude Code re-attaches after a compaction.
 - Evidence stays out of this file. It is read whole before the first dispatch and after every compaction, so a probe date, a session count, or an incident goes in `AUDIT.md`, and this file keeps the instruction and the one reason a lead needs.
-- Re-run the probes behind this file after a Claude Code upgrade that changes how scripts background commands, and update the date in the second paragraph.
+- Re-run the probes behind this file after a Claude Code upgrade that changes how scripts background commands, and update the date in the second paragraph. At each upgrade also run `typeof spawnContext` in a lead script: the 2.1.326 binary holds a gated script API for sub-agents (awaitable results, a cost figure per context) that is `undefined` here. If it appears, the `Agent` row and the drain script need rewriting around it (`AUDIT.md`, 2026-11-16 frontier pass).
