@@ -46,9 +46,9 @@ In priority order:
 
 **Tiers** (full table: routing):
 
-- Codex ladder: luna `max` → 6.1-sol `medium` → 6.1-sol `xhigh` → astra `low` → astra `high` → astra `xhigh` (single turn). Claude: sonnet `high` for recon and docs sync (`scout-sonnet`, `docs-sync-sonnet`, `general-purpose` at `model: sonnet`); `Explore` inherits; `implementer-opus` and `pr-reviewer-opus` at `medium` → `xhigh`, `researcher-opus` at `medium` → `high`, the rung set by `effort` on the call. Anything else is off the ladder (user decisions).
+- Codex ladder: luna `max` → 6.2-sol `medium` → 6.2-sol `xhigh` → astra `low` → astra `high` → astra `xhigh` (single turn). Claude: sonnet `high` for recon and docs sync (`scout-sonnet`, `docs-sync-sonnet`, `general-purpose` at `model: sonnet`); `Explore` inherits; `implementer-opus` and `pr-reviewer-opus` at `medium` → `xhigh`, `researcher-opus` at `medium` → `high`, the rung set by `effort` on the call. Anything else is off the ladder (user decisions).
 - **User permission per dispatch:** `max` on astra, sol, or opus; `ultra` anywhere.
-- **The starting rung is set by who catches a failure, not by difficulty.** Mechanical check, spec-determined output, loud failures → luna, write work included. Machine-caught otherwise → 6.1-sol `medium`. Caught by your review → 6.1-sol `xhigh`. Terminal-heavy build/test loops → astra `low`. Multi-subsystem or silent-failure domain → astra `high`. Judgment as the deliverable (first-round silent-failure review, untrusted content) → astra `xhigh`. Claude coding legs start at opus `medium`; React / component work goes to Claude at `xhigh`.
+- **The starting rung is set by who catches a failure, not by difficulty.** Mechanical check, spec-determined output, loud failures → luna, write work included. Machine-caught otherwise → 6.2-sol `medium`. Caught by your review → 6.2-sol `xhigh`. Terminal-heavy build/test loops → astra `low`. Multi-subsystem or silent-failure domain → astra `high`. Judgment as the deliverable (first-round silent-failure review, untrusted content) → astra `xhigh`. Claude coding legs start at opus `medium`; React / component work goes to Claude at `xhigh`.
 - **Stepping:** first rule out a harness defect (repair the brief, same tier) and a runway shortfall (approach sound, tests improving: resume the same worker). Then a conceptual failure moves the model tier and a depth failure moves effort.
 
 ## Orchestration playbook
@@ -124,4 +124,4 @@ A clean Codex stop exits 1 with no `.last.md` (`stopped_by_sigint`): not a worke
 - **Decommission after merge:** `git worktree remove ../<task> && git branch -d <task>` (`-D` if cherry-picked). Claude auto-cleans *unchanged* trees only.
 - Worktrees isolate *files*, not runtimes: assign per-worker ports/temp/DB names and shared build/simulator ownership in any spec that runs something. After a low-memory kill, cut concurrency before retrying; a killed process is a runtime interruption, not a rejected review.
 
-*Pins (verified 2026-11-09): codex-cli 0.167.0 · claude-code 2.1.321 · roles pin `claude-opus-5-5` / `claude-sonnet-5-5` · gpt-6-astra, gpt-6.1-sol, gpt-6-luna.*
+*Pins (verified 2026-11-09): codex-cli 0.167.0 · claude-code 2.1.321 · roles pin `claude-opus-5-5` / `claude-sonnet-5-5` · gpt-6-astra, gpt-6.2-sol, gpt-6-luna.*

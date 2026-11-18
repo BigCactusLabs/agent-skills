@@ -2,6 +2,10 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-11-18
+- orchestrator: the two sol rungs move from `gpt-6.1-sol` to `gpt-6.2-sol` (released 2026-11-17) at unchanged efforts, provisionally, until a harder eval tier reports; astra stays on `gpt-6-astra`. `REFERENCE.md` adds a GPT-6.2 Sol pricing paragraph and the interim swap evidence: on 7 hidden-test cases 6.2-sol matched the same-night 6.1-sol `medium` control on passes, ranked better with a blind diff judge, used about 10% more credits, and added more that the brief did not ask for; outside benchmarks disagree on direction. `routing.md` and `runtime.md` carry the new id, the catalog default and a context-window note.
+- cm-orchestrator: mirrors the `gpt-6.2-sol` rungs and footer pin. `references/code-mode.md` updates the orchestrator `SKILL.md` checksum and gains the 2026-11-17 line listing the four Code Mode reports filed upstream.
+
 ## 2026-11-17
 - task-context-enrichment: removed. The skill is not installed locally; the last published version is in git history.
 - linear-workflows: removed. The skill is no longer installed locally; the last published version is in git history.

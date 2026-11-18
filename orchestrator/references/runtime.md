@@ -10,7 +10,7 @@ Once per session, before the first Codex dispatch:
 codex --version && codex login status
 ```
 
-Want `Logged in using ChatGPT` (exit 0); otherwise the **user** runs `codex login`. A version off `SKILL.md`'s footer pin means the notes in this file are unverified. Before the first astra or sol dispatch, confirm access with a one-turn read-only probe on that model (`-m gpt-6-astra` / `-m gpt-6.1-sol`). Once per CLI version, run `python3 "$HOME/.claude/skills/orchestrator/scripts/codex_steer.py" probe` (one luna `low` turn): it checks that the steer, ask-relay, and status hooks are installed and trusted on all three events ([setup](#steer-a-running-codex-worker)). While it fails, Codex workers get no steers and no status-line check, so correct them by stop and resume; when only its `PreToolUse` checks fail, steers still land after the call and waiting asks degrade to working asks.
+Want `Logged in using ChatGPT` (exit 0); otherwise the **user** runs `codex login`. A version off `SKILL.md`'s footer pin means the notes in this file are unverified. Before the first astra or sol dispatch, confirm access with a one-turn read-only probe on that model (`-m gpt-6-astra` / `-m gpt-6.2-sol`). Once per CLI version, run `python3 "$HOME/.claude/skills/orchestrator/scripts/codex_steer.py" probe` (one luna `low` turn): it checks that the steer, ask-relay, and status hooks are installed and trusted on all three events ([setup](#steer-a-running-codex-worker)). While it fails, Codex workers get no steers and no status-line check, so correct them by stop and resume; when only its `PreToolUse` checks fail, steers still land after the call and waiting asks degrade to working asks.
 
 ## Worker config
 
@@ -23,8 +23,8 @@ Pick the weakest sandbox that works; full bypass is for trusted write work the s
 | Closed-ended web lookups, bulk verification of a known list | `read-only` with `web_search: "live"` (manual flag: `-c web_search="live"`; the boolean form is silently ignored) |
 | Cross-model code review | `codex review --uncommitted` (or `--base <branch>` / `--commit <SHA>`). **A custom prompt excludes every scope flag**; a *focused* review is `codex exec -s read-only` with the reviewer running `git diff <range>`. Pin the model with `-c model="..."` (`REFERENCE.md`, Codex flag fine print) |
 
-- **Model and effort are explicit on every dispatch, resume, and fork.** An unpinned dispatch silently runs the catalog default (6.1-sol `low` since CLI 0.159.1). Ids: `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-luna`. Flags are pinned so the skill ignores `~/.codex/config.toml` (manual-flag traps: `REFERENCE.md`, Codex flag fine print).
-- **Context windows:** astra and luna have a 272K Codex window and reprice the whole request above it, so chunk the leg instead; 6.1-sol's subscription window is 500K with no long-context fee (`REFERENCE.md`, pricing).
+- **Model and effort are explicit on every dispatch, resume, and fork.** An unpinned dispatch silently runs the catalog default (6.2-sol `low` in the live catalog on 2026-11-18; 6.1-sol `low` before it, since CLI 0.159.1). Ids: `gpt-6-astra`, `gpt-6.2-sol`, `gpt-6-luna`. Flags are pinned so the skill ignores `~/.codex/config.toml` (manual-flag traps: `REFERENCE.md`, Codex flag fine print).
+- **Context windows:** astra and luna have a 272K Codex window and reprice the whole request above it, so chunk the leg instead; 6.2-sol's Codex window is 500K (live catalog, 2026-11-18); the no-long-context-fee statement was made for 6.1-sol and has not been re-read for 6.2 (`REFERENCE.md`, pricing).
 - **Effort scale:** `model_reasoning_effort` runs `none`→`max`. `ultra` (above `max`, account-gated) lets Codex *proactively delegate* to internal subagents, forfeiting per-worker steering, hence user-gated. `persistent` withholds `turn.completed` while work remains: never dispatch it.
 - **`workspace-write` is the default for write legs** (user decision 2026-11-06). The OS enforces it, and it protects the user's files and the repo's config: `~`, `~/.cache`, the repo's `.git/config` and hooks, and the worktree's `.git` pointer file stay read-only. It does not confine the worker to its worktree, and it does not separate one run from another ([what the sandbox does not stop](#what-the-sandbox-does-not-stop)). Through the helper it gets network (record `network: false` for untrusted-input legs), the linked worktree's git paths so the worker can commit, and worker-only package caches. An ordinary checkout cannot commit under it, so write legs use linked worktrees.
 - **Worktrees are made by hand** (`git worktree add ../<task> -b <task>`). Codex's native `--worktree` is not a substitute (`REFERENCE.md`, watch items).
@@ -60,7 +60,7 @@ After reading the current manifest and brief, write a fresh `<task>.r<run>.run.j
   "workspace": "/absolute/worker-worktree",
   "brief": "/absolute/scratchpad/briefs/TASK-ID.r1.md",
   "artifact_dir": "/absolute/scratchpad/artifacts",
-  "model": "gpt-6.1-sol",
+  "model": "gpt-6.2-sol",
   "effort": "medium",
   "permission_mode": "workspace-write"
 }
