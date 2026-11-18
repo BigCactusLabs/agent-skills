@@ -3,7 +3,7 @@
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
 ## 2026-11-17
-- task-context-enrichment: removed. The skill was never installed locally; the last published version is in git history.
+- task-context-enrichment: removed. The skill is not installed locally; the last published version is in git history.
 - linear-workflows: removed. The skill is no longer installed locally; the last published version is in git history.
 - cm-orchestrator: `references/code-mode.md` gains the upgrade check for the gated sub-agent script API, which the first publish left out. The published file now matches the installed one.
 - cm-orchestrator: new skill, the code-mode edition of orchestrator for a Claude Code lead whose tools are `REPL` and `Poll`. `SKILL.md` carries orchestrator's policy unchanged, under 20,000 characters; `references/code-mode.md` gives the script form of each mechanic: the awaited launch with a short timeout and its task handle, checked `{error}` results from built-in tool calls, the drain script, a bounded background wait for things that send no notification (a review bot, CI), which workers run in code mode, and script pitfalls. It reads orchestrator's references and scripts, so both are installed together. Checked on claude-code 2.1.326.
