@@ -52,6 +52,14 @@ Ported from the source `AUDIT.md` entries "2026-11-06 — per-run TMPDIR", "2026
 - Not ported: the shorter ask relay, role colors, the subagent cache-TTL probe, and Orca's removal (this runtime has none of them); the prune pass (it changed no rule); the 19,500-character `SKILL.md` test, because the limit is Claude Code's compaction re-attach and Codex's was not probed (this body is about 21,500 characters, so the compaction rule re-reads the file); the ladder-identity test (the ladder is stated once here); the source's open proposal to narrow the sandbox envelope, which it left for the user.
 - Tests: `scripts.test_dispatch` 25 pass with stdin closed; the new `scripts.test_skill_docs` checks local links and anchors.
 
+## Sync 2026-11-18
+
+Ported from the source `AUDIT.md` entry "2026-11-18 — sol rungs moved to gpt-6.2-sol (provisional)", at the user's direction for this skill too. Both Sol rungs run `gpt-6.2-sol` at unchanged efforts; Astra `low`, the ladder's shape, and every other rule are unchanged ([routing history](routing-history.md)).
+
+- Edited: the routing table and authorized overrides in `SKILL.md`, the rung flags, default-model note, access probe and run-record example in `cli-workers.md`, the dispatch line in `native-agents.md`, and the model id in `scripts/test_dispatch.py`.
+- Not rechecked: helper flags against codex-cli 0.169.1 (installed; the examples match 0.167.0 help), and no worker ran through this skill's helper or a native agent on `gpt-6.2-sol`. The source skill's helper ran one read-only `gpt-6.2-sol` `medium` turn on 0.169.1, and the rollout named the model and effort.
+- Tests: `scripts.test_dispatch` and `scripts.test_skill_docs` pass with stdin closed.
+
 ## Keep source-specific rules out
 
 Do not copy Claude's permission bypass, role hooks, `Agent`/`SendMessage`/`TaskStop`, background sessions, larger pools, high-effort Astra workers, lane leads, or automatic PR/delivery conventions. Preserve Codex's sole lead, explicit model/effort ladder, native-first routing, sandbox-only CLI helper, restricted Claude reviews, and user-directed publication boundary. Do not add default duplicate research sweeps or progress-file polling; use the task's actual research and supervision needs.
