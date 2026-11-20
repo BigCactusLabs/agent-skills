@@ -126,4 +126,4 @@ A clean Codex stop exits 1 with no `.last.md` (`stopped_by_sigint`): not a worke
 - **Decommission after merge:** `git worktree remove ../<task> && git branch -d <task>` (`-D` if cherry-picked). Claude auto-cleans *unchanged* trees only.
 - Worktrees isolate *files*, not runtimes: assign per-worker ports/temp/DB names and shared build/simulator ownership in any spec that runs something. After a low-memory kill, cut concurrency before retrying; a killed process is a runtime interruption, not a rejected review.
 
-*Pins (verified 2026-11-09): codex-cli 0.167.0 · claude-code 2.1.321 · roles pin `claude-opus-5-5` / `claude-sonnet-5-5` · gpt-6-astra, gpt-6.2-sol, gpt-6-luna.*
+*Pins: codex-cli 0.171.0 (2026-11-20) · claude-code 2.1.321 (11-09) · roles pin `claude-opus-5-5` / `claude-sonnet-5-5` · gpt-6-astra, gpt-6.2-sol, gpt-6-luna.*

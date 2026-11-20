@@ -60,6 +60,18 @@ Ported from the source `AUDIT.md` entry "2026-11-18 — sol rungs moved to gpt-6
 - Not rechecked: helper flags against codex-cli 0.169.1 (installed; the examples match 0.167.0 help), and no worker ran through this skill's helper or a native agent on `gpt-6.2-sol`. The source skill's helper ran one read-only `gpt-6.2-sol` `medium` turn on 0.169.1, and the rollout named the model and effort.
 - Tests: `scripts.test_dispatch` and `scripts.test_skill_docs` pass with stdin closed.
 
+## Sync 2026-11-20
+
+Ported from the source `AUDIT.md` entries "2026-11-14 — lessons from a three-task code-mode batch", "2026-11-16 — field review of code-mode sessions", and the two 2026-11-20 entries. Pin: codex-cli 0.167.0 → 0.171.0. Claude Code was not rechecked (2.1.329 is installed; the review commands were last checked against 2.1.322 help). No routing, model, or effort rung changed.
+
+- Live on 0.171.0 through this skill's helper (luna `low`, `workspace-write`, a scratch linked worktree under `~`): a start and a resume both reached `turn.completed` with a nonempty `.last.md` and both commits landed (each with the expected `packed-refs.lock` message); a bare `touch` of a new file under `~` was denied, so `--ignore-rules` holds; a write to the main checkout was denied; `mktemp -d` worked; `TMPDIR` was the per-generation directory; `--check-worktree` exit 0. A fork was not run through this helper; the source helper's fork, which passes the same argv form, ran the same day.
+- Help on 0.171.0: `exec resume` and `exec fork` list the helper's flags and still lack `--add-dir` (both exit 2 on it).
+- From the source's 0.171.0 probes: the `codex sandbox` writable set of 11-09 holds in all four modes; `read-only` heredocs still fail in zsh, `/bin/sh`, and `/bin/bash` 3.2; a stopped `exec` leaves a zero-byte `.last.md` where 0.167.0 left none.
+- Policy, three sentences in `SKILL.md` with a smoke-checks row each: append-only lists get one owner; passing tests, a `--stat`, or a sliced read is not the review; each open decision in the final answer carries its context and one recommendation, with the user's actions numbered. The brief template's shared-resources field names append-only lists.
+- `cli-workers.md` also records, from the release notes and unprobed, that `exec` since 0.169.0 keeps project configuration and MCP servers off in untrusted directories without `--trust`, and the two `[features].multi_agent` deprecation `error` items that open the event stream.
+- Not ported: everything about Code Mode, `REPL` scripts, and the Claude Code upstream reports; the ask relay and steer probe; the compaction hook; harness-created worktree readiness and `-D` after a cherry-pick (Claude subagent worktrees; `cli-workers.md` already lists `branch -D` from the lead's checkout); the push-and-open-PR authorization and the blanket landing rule (delivery conventions stay user-directed here); approved production queries delegated to a worker; diagnosis legs (unmeasured in the source, and no leg has run there).
+- Tests: `scripts.test_dispatch` and `scripts.test_skill_docs` pass with stdin closed.
+
 ## Keep source-specific rules out
 
 Do not copy Claude's permission bypass, role hooks, `Agent`/`SendMessage`/`TaskStop`, background sessions, larger pools, high-effort Astra workers, lane leads, or automatic PR/delivery conventions. Preserve Codex's sole lead, explicit model/effort ladder, native-first routing, sandbox-only CLI helper, restricted Claude reviews, and user-directed publication boundary. Do not add default duplicate research sweeps or progress-file polling; use the task's actual research and supervision needs.
