@@ -8,6 +8,8 @@ The lead defines contract-derived acceptance cases. The existing implementation 
 
 The lead independently inspects the integrated diff and test assertions, with targeted integration probes where needed. Additional lead-authored tests address a named uncovered risk. Independence does not require a duplicate harness or a standing second test agent. Preserve meaningful regression coverage and required gates.
 
+Choose the smallest check that could catch the likely mistake. For a bug fix, use an existing reproduction if available and check that it fails for the reported reason before the fix and passes afterward. For a behavior-preserving migration, run the same representative input through the old and new entry points or compare against a trusted capture from the old version. Compare only observable behavior covered by the contract and name any intended differences. When the implementation and its mock could agree on the same error, exercise the affected boundary with an existing local harness. If that boundary is inaccessible, record precisely what the mock covered and what remains unverified.
+
 For parallel changes that consume the same interface or state rule, name the combined acceptance case. Individual passes and a conflict-free merge do not establish that the combination works. If a producer changes a settled contract, give affected consumers its accepted artifact/revision before dependent work continues; keep the resulting integration check with one owner.
 
 ## Prepare the worktree once

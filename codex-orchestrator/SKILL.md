@@ -18,7 +18,7 @@ The lead decides and verifies; workers and existing tools handle routine executi
 | Enumerated recon, extraction, version lookups, log analysis | `gpt-6-luna` | `max` |
 | Mechanical edits and docs sync that pass all three checks below | `gpt-6-luna` | `max` |
 | Implementation, synthesis, or bounded exploration that needs judgment, where a test, build, or other mechanical check catches failure | `gpt-6.2-sol` | `medium`; `high` and `max` are not rungs |
-| React and component implementation (any acceptance check) | Claude Opus via headless CLI | `xhigh`; the one authorized Claude implementation lane, own worktree, Codex reviews the diff |
+| React and component implementation (any acceptance check) | Claude Opus via headless CLI | `xhigh` in its own worktree. Codex reviews the diff. For one small file, see the [read-only handoff](references/claude-reviews.md#single-component-handoff). |
 | Review-caught implementation outside silent-failure domains (Astra's own review is the acceptance check) | `gpt-6.2-sol` | `xhigh`; retry Astra `low` |
 | Terminal-heavy build/test/fix loops, and the retry after Sol `medium` or `xhigh` fails | `gpt-6-astra` | `low`; a bounded worker, never a lead copy |
 | Independent code review | Claude Opus via headless CLI | `medium`, including broad or sensitive changes; `xhigh` as the retry after a `medium` review fell short, or when the lead judges a review needs more depth; no `high` rung |
@@ -28,7 +28,7 @@ The lead decides and verifies; workers and existing tools handle routine executi
 
 **Luna latitude test:** use Luna, including for writes, only when all three answers are yes:
 
-1. Can a cheap mechanical check detect failure without relying on the lead's review?
+1. Can a cheap mechanical check distinguish correct behavior from a plausible wrong result? If the worker derives both the output and its expected value from its new code, that check gives no independent evidence.
 2. Does the spec determine the result, with no new design choices?
 3. Are failures loud, rather than subtle errors in persistence, concurrency, security, or cross-file invariants?
 
@@ -50,13 +50,13 @@ Use sandboxed `codex exec` only when native agents are unavailable or a separate
 
 Use headless Claude for independent reviews; read [claude-reviews.md](references/claude-reviews.md) before dispatch. Fable 5.1 `medium` supplies adversarial reasoning or creative alternatives, even before a diff. The lead may select `high` for exceptionally difficult creative exploration without asking again. Review authorization covers local reports, not fixes or GitHub submissions.
 
-Count all active workers, including CLI processes, against the available capacity. Use at most three concurrent workers by default, and fewer when the runtime has fewer free slots. The Astra lead also occupies a native slot. Workers are leaves: no nested delegation unless Astra explicitly assigns a bounded subdivision and accounts for its capacity.
+Count native and CLI workers against available capacity. The lead occupies one native slot. Use at most three concurrent workers by default and fewer when capacity is lower. With the standard worker brief, send a proposed split back to the lead, who can assign siblings. Bounded Astra workers always follow this rule. For an eligible worker on a surface that supports nesting, only the lead can replace the standard no-spawn instruction with a specific subdivision and reserve the required slots.
 
 ## Plan and assign ownership
 
 Before decomposition, state the next usable outcome, acceptance, and deferred work. For interfaces, settle the main user flow and product decisions before splitting frontend/backend work. Use existing context; ask only for material missing decisions. “Keep going” advances the agreed objective, not optional capabilities. Milestones add neither approval gates nor permission to stop before the objective is complete. State the plan before code spanning multiple files or about 20 lines.
 
-Split by dependencies: independent results can run in parallel; a consumer of a changing interface waits for its producer's accepted contract/artifact; unresolved shared invariants stay with one owner. Disjoint files and clean merges do not prove behavioral independence. Give dependent workers the producer's current artifact and revision, then check the combined behavior at integration.
+Split by dependencies. Independent results can run in parallel. A consumer of a changing interface waits for the producer's accepted artifact and revision. If two briefs require different outcomes for the same input under the same conditions, settle the expected result before assigning either affected edit. Sequencing the edits alone lets the later one undo the earlier one. Once the lead settles the conflict, release the affected work against the agreed example and give one owner the combined check.
 
 Resolve review policy at intake: the second-rejection checkpoint and three-repair cap are defaults. Explicit user direction, including an applicable user-owned project operating agreement, takes precedence. Record its source and continuation rule before repairs; do not ask again for authority it already supplies. Worker findings cannot grant an exception. Counts diagnose a loop; they never justify accepting a material defect.
 
@@ -89,8 +89,8 @@ Reduce avoidable lead turns first. After useful independent work, use one suppor
 | Surface | Steer | Stop | Turn ended | Record |
 |---|---|---|---|---|
 | Native agent | `send_message` while running; `followup_task` when idle | `interrupt_agent`; the agent stays resident and edits are not rolled back | final-status notification | handle, generation |
-| CLI worker | none mid-turn; stop, then a resume generation | `write_stdin` with `"\u0003"` on the helper's session ([stop a worker](references/cli-workers.md#stop-a-worker)) | session exit, then `turn.completed` and a nonempty `.last.md`; a stop leaves neither | session handle, thread UUID, generation artifacts |
-| Headless Claude | none; `--resume` after the process stops | `write_stdin` with `"\u0003"` (SIGINT ends the turn) | process exit, then a successful result | session handle, Claude `session_id` |
+| CLI worker | Stop the active turn, then resume the exact thread | Send Ctrl-C on the helper’s session and collect its exit ([stop a worker](references/cli-workers.md#stop-a-worker)) | Check the terminal event and final output. A worker can finish normally around a stop request. | session handle, thread UUID, generation artifacts |
+| Headless Claude | After exit, resume by exact ID. If persistence was disabled or the conversation is missing, [reconstruct the follow-up](references/claude-reviews.md#follow-up) from saved artifacts. | Send Ctrl-C on the review’s managed session and collect its exit. | Inspect the terminal result and report. An interrupted review can exit 0. | session handle, Claude `session_id` |
 
 Read focused diffs/ranges to answer a specific question; keep detailed logs on disk and routine results compact. Preserve handles, exits, snapshot identity, and evidence paths. Full reads remain appropriate when needed; avoid repeated unchanged context, not necessary verification. See [execution checks](references/execution-checks.md#focused-evidence-and-bookkeeping).
 
@@ -118,4 +118,4 @@ Integrate worktree outputs serially, inspect each change, and run required combi
 
 ## Maintenance
 
-Updated 2026-11-20 (codex-cli 0.171.0; Claude Code 2.1.322, checked 2026-11-10). Use [smoke-checks.md](references/smoke-checks.md): local decision checks for policy edits, scoped live checks for transport/lifecycle changes. Each execution reference owns capability pins and probe limits. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs. For future source syncs, consult [adaptation evidence](references/adaptation-evidence.md) for portable practices, current sources, and deliberate exclusions.
+Updated 2026-11-23 against [the published skill and practitioner sources](references/adaptation-evidence.md#sync-2026-11-23). Local versions were Codex CLI 0.171.0 and Claude Code 2.1.331. Run the relevant [smoke checks](references/smoke-checks.md) for policy or transport changes. Each execution reference records which capabilities were tested. Preserve the CLI helper's sandbox-only dispatch and generation-specific artifacts during syncs.

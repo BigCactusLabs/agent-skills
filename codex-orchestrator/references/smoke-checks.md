@@ -1,6 +1,6 @@
 # Bounded orchestration checks
 
-Run relevant live cases after changing tool calls, message delivery, lifecycle handling, handoff transport, or process controls. For policy, brief, or artifact-path changes that preserve those mechanisms, use the local checks below; do not start a worker just to test prose. Do not run the entire set for copy edits. These are live agent exercises, not tests that match the skill's wording. They consume model usage; use one or two Luna workers for mechanical fixtures, with Astra doing useful local validation alongside them. Use Claude only for review cases. Never reproduce an unbounded mailbox/wait loop.
+Run relevant live cases after changing tool calls, message delivery, lifecycle handling, handoff transport, or process controls. For policy, brief, or artifact-path changes that preserve those mechanisms, use the local checks below; do not start a worker just to test prose. Do not run the entire set for copy edits. These are live agent exercises, not tests that match the skill's wording. They consume model usage; use one or two Luna workers for mechanical fixtures, with Astra doing useful local validation alongside them. Use Claude for its assigned review or component cases. Never reproduce an unbounded mailbox/wait loop.
 
 Create unique scratch fixtures outside production repositories. Record the date, exposed runtime/model metadata, task/revision/generation, handles, actual result, and pass/fail/not-run per case. Keep raw output in scratch space. Report partial coverage honestly; a shell syntax check cannot pass a message-delivery case.
 
@@ -13,14 +13,40 @@ Create unique scratch fixtures outside production repositories. Record the date,
 | Completion collection | Observe the ended generation through status and its report; distinguish an old report from a newly dispatched generation. | Astra records the matching generation's result and does not continue waiting for its completion event; unrelated mailbox activity does not conceal an overdue task. |
 | Authorized peer | Verify both workers' messaging tools, then give a named pair a factual scope; one holds needed input. Include a bounded no-reply variant when changing peer rules. | Request/reply stays within scope; decisions or unanswered dependencies return to Astra. If tools are absent, record direct peer exchange unavailable and verify parent/artifact relay separately. No assumed fact, repeated send, or sibling wake-up. |
 | Interruption | Have a scratch-only worker save a small partial artifact, then enter a bounded pause; interrupt its turn. | Partial artifact survives; interrupted status is not DONE; no replacement starts against still-running writes. |
-| CLI stop | Start a helper-dispatched scratch worker on a bounded pause (its brief forbids sending input or signals), then send `"\u0003"` with `write_stdin` on its session. | Process exits 1 with no `turn.completed`/`turn.failed` and no `.last.md`, or an empty one (0.171.0 leaves a zero-byte file); the rollout records `turn_aborted`; a resume generation continues the thread; Astra records a stop, not a failed implementation. |
+| CLI stop and resume | Start a bounded read-only command through the helper. Once its command-start event appears, send Ctrl-C on that session. Collect its exit and check for surviving children. | Confirm the stop from the exit, events and final file. Resume the same thread with a changed acceptance case and check that the original artifacts survive. Record a normal completion separately. [Observed behavior on 0.171.0](cli-workers.md#stop-a-worker). |
 | Checkpoint replacement | Give a fresh worker the checkpoint path and newer revision; retain task identity/repair count. | Successor uses the actual saved state and new rule, does not redo completed work, and preserves retry accounting. |
 | Stale review | Record a fixture hash, obtain a bounded reviewer report, then deliberately change the fixture. | Astra invalidates the report for the changed snapshot; reviewer DONE is not treated as code approval. |
 | Claude transport | Run the restricted read-only command on a harmless fixture. | Successful process/result, nonempty report, expected model/tool inventory, and no prohibited work. |
+| Claude follow-up | Give the first review a unique marker. Omit it from the exact-ID follow-up and supply a corrected fixture. | The resumed reviewer recalls the marker and verifies the correction. When the transcript is unavailable, a fresh session can use the saved report to verify closure. |
+| Claude cancellation | Request Ctrl-C on the managed session after a fixture read starts. | Collect the exit and terminal stream. An interruption with an error or missing result leaves the review incomplete. If the review completed first, verify its report and record normal completion. |
+| Single-component handoff | Use a small component with a failing acceptance check. Have read-only Opus return the owned file. | Codex rejects a changed base or unexpected path before writing. The accepted diff changes only the owned component and passes the original checks. |
 
 Do not require a particular sentence or hidden reasoning trace. Verify values, artifacts, revisions, permissions, and lifecycle outcomes. If a real upstream fault appears, stop the affected case after one bounded diagnosis; do not widen permissions or switch to a forbidden surface to finish the test.
 
 For optional Claude resume/cancellation checks, run only when those mechanics changed or a failure warrants it. Preserve the exact conversation ID and old output, ensure the original process stopped, and validate the new generation separately. Test SDK bridges only after explicitly adopting one and verifying its installed capabilities.
+
+## Claude checks on 2026-11-23
+
+Claude Code 2.1.331 reported model `claude-opus-5-5` for the completed reviews and component task.
+
+| Case | Observed result |
+|---|---|
+| Saved transcript | Under the same restricted flags and working directory, the exact-ID follow-up recalled a marker omitted from its brief and verified the corrected value of 42. The same transcript grew on disk. |
+| Canceled review | Ctrl-C on a non-TTY managed session interrupted the review after three of six fixture reads. The process exited 0. The stream contained `[Request interrupted by user]`, then `result/error_during_execution` with `is_error: true` and no report. All six fixture hashes matched afterward. |
+| Unwritable transcript | Denying the first process writes to the fixture's transcript directory still produced a successful review with matching startup and result IDs. The log recorded `EPERM` for that session's transcript, and no file was created. A resume with normal access exited 1 and reported the exact ID missing. In an earlier run, a fresh reviewer given the saved report and corrected fixture verified closure and preserved the original event stream. |
+| Single-component handoff | Opus was launched at `xhigh` and used only Read. Codex rejected a stale source and a different destination in two local checks. It then inspected and applied the returned change to the assigned button in its isolated worktree. Two of four React server-rendering tests failed on the baseline. All four passed on the patch with the original tests. |
+
+## Native checks on 2026-11-23
+
+These runs requested Luna at `max`. The collaboration tools returned handles and statuses. The workers' applied model and effort were unverified.
+
+| Case | Observed result |
+|---|---|
+| Parent steering and idle follow-up | `/root/handoff_smoke` acknowledged revision 2 in generation 1 and returned the closed items totaling 6. A follow-up on the idle handle started generation 2 and returned the open items totaling 18 under revision 3. Both matched an independent four-row CSV calculation. |
+| Direct peer delivery | After both workers confirmed their reply tools, `/root/count_owner` asked `/root/selection_owner` for a selection. The reply echoed the caller's challenge and returned a receipt from the provider's input. The consumer selected Alder and Larch for 21 units. Its live message and final report described one result. The lead verified the receipt, items and total. |
+| Unanswered peer request | The provider confirmed receiving the fresh challenge and deliberately withheld its reply. At the ten-second fixture deadline, the consumer reported the four rows it could count independently and left the selection open. It did not reuse the previous result. |
+| Interruption | The provider finished its only write and reported that no writer remained. The lead interrupted its running turn and confirmed the `interrupted` status. The saved checkpoint identified records a and b with subtotal 23. Its SHA-256 was identical before and after replacement work. |
+| Replacement | A different worker rejected a checkpoint from generation 0 when generation 1 was required. Given the correct checkpoint and only the remaining rows, it added 18 and returned 41. The lead verified the original receipt, input hash, both counters and all four records independently. |
 
 ## Local policy and artifact checks
 
@@ -30,6 +56,9 @@ Use scratch records and existing or synthetic evidence to walk these decisions w
 |---|---|
 | A bounded leg is ready before the lead has explored its implementation | Delegate with outcome, constraints, owned paths, tool access, and acceptance. Do not repeat that exploration first. Short or dependent work can remain local; no manufactured lead task is needed to justify a useful worker. |
 | Separate files change the same cache/write or interface rule | Settle the shared contract and sequence dependent work. Supply the producer's accepted artifact/revision and verify the combined case; separate passing tests or a clean merge are insufficient. |
+| Two workers would remove and preserve the same field for the same client | Resolve the conflicting requirements before dispatch. Give the affected workers the agreed example and assign the combined check to one owner. |
+| A migration changes a redirect to a successful response and updates its mock to match | Compare the same request against the old route or a trusted capture. An unintended status change fails compatibility even when the mock passes. A requested status change uses the new contract. |
+| One check fails and then passes on the same snapshot | Preserve both results. Report the inconsistent outcome and seek evidence for the cause when acceptance depends on it. |
 | Sibling briefs share constraints but need different inputs | Keep stable constraints first, specifics last, and use accessible source artifacts. Do not promise a cache hit, pad the prompt, or override worker routing to inherit the lead's history. |
 | Native worker needs a recent slice of the lead's history | The current schema accepts only `all` or `none`. Use `none` with the relevant facts/artifacts and explicit routing; do not send a numeric string or overrides with `all`. |
 | Worker needs an identifier or unit that the brief did not supply | Inspect the authoritative input and report its shape or the missing fact. Do not invent a plausible value; routine implementation choices remain permitted within the contract. |

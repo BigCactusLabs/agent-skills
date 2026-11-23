@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-11-23
+- **codex-orchestrator** now assigns conflicting edits after the lead resolves the expected behavior and asks workers to verify results against an independent reference. Live checks cover native messaging and checkpoint recovery, Codex CLI stop and resume, Claude review cancellation and recovery, and a read-only handoff for a small React component.
+
 ## 2026-11-20
 - orchestrator: codex-cli pin 0.167.0 → 0.171.0. Rerun on 0.171.0: the `codex sandbox` probes in all four modes (the 11-09 writable set holds), a live helper start, resume and fork in a linked worktree (commit lands, a bare `touch` under `~` denied with `--ignore-rules`, main checkout denied), and `codex_steer.py probe` (ten of ten). `exec resume` and `exec fork` still lack `--add-dir`. Not rerun: `codex review`. The claude-code pin stays 2.1.321.
 - cm-orchestrator: `references/code-mode.md` checked on claude-code 2.1.329 with codex-cli 0.171.0. `Agent` results no longer echo the prompt; a long MCP call errors after ten minutes; a stopped Codex run leaves a zero-byte `.last.md`, so test its size; a failing hook refuses a call only with `"onFailure": "block"`; a script that names a variable left unset by a thrown script is refused whole; own declarations of `log`, `preview` or `sleep` last one script; a scan over many files is one command. Of the four Code Mode reports filed upstream, two are fixed in 2.1.328/2.1.329 and closed, and two workarounds stay. Footer pin and checksum follow orchestrator.
