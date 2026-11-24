@@ -17,7 +17,7 @@ Use `gh` for GitHub and `git` for checkout/history. Resolve supplied URLs before
 ## Read the relevant reference
 
 - [CLI/API](references/cli-and-api.md): authentication, API headers/pagination, versions, remote files, URL lookup/routing, repository deletion.
-- [PRs/issues](references/prs-and-issues.md): merge checks/async API, reviews/threads, discussions, worktrees, attachments/retries, issue artifacts.
+- [PRs/issues](references/prs-and-issues.md): merge checks, reviews/threads, event waits, discussions, worktrees, attachments/retries.
 - [Actions](references/actions.md): checks, reruns, logs, permissions, cache, retention, dependency lockfiles.
-- [Stacks](references/stacks.md): dependent PRs and stack-aware CI; never use `gh pr merge` on a stacked PR.
+- [Stacks](references/stacks.md): dependent PRs; never use `gh pr merge` on a stacked PR.
 - [Agents](references/agents.md): Copilot tasks, `gh skill`, Markdown workflows/lock files.

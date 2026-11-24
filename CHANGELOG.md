@@ -2,6 +2,9 @@
 
 One line per change, newest first, prefixed by skill. Details live in each skill's own files.
 
+## 2026-11-24
+- working-with-github: publish the installed November 20 audit. gh v2.105.0 adds `gh event listen` / `subscription` (preview); gh-actions-lock v0.5.x verification and gh-aw v1.2.3–v1.3.1 breaking defaults are recorded; the November 12 audit is kept in compressed form below it. The SKILL.md index lines and the references are updated to match.
+
 ## 2026-11-23
 - **codex-orchestrator** now assigns conflicting edits after the lead resolves the expected behavior and asks workers to verify results against an independent reference. Live checks cover native messaging and checkpoint recovery, Codex CLI stop and resume, Claude review cancellation and recovery, and a read-only handoff for a small React component.
 

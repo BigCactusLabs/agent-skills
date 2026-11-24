@@ -4,31 +4,21 @@ API conventions: [CLI/API](cli-and-api.md).
 
 ## Creation and merging
 
-`gh pr create --dry-run` may still push Git changes. For a local-only preview, prepare the title/body in a file and inspect the diff.
+`gh pr create --dry-run` can still push.
 
-For an authorized ordinary PR merge, read the current `headRefOid`, review state, and checks, then pass that verified SHA to `gh pr merge --match-head-commit <SHA>`. If the head changes, refresh the evidence. On a merge-queue branch, the command enables auto-merge while checks are pending or queues the PR when ready; verify the eventual merged state before reporting completion. `--admin` bypasses requirements and needs explicit intent. For stacked PRs use [Stacks](stacks.md).
-
-### Async merge API
-
-For custom merge automation or CLI gaps, GitHub recommends the [async merge API](https://docs.github.com/en/rest/pulls/pulls?apiVersion=2026-03-10#merge-a-pull-request-asynchronously). Use `gh api --method PUT repos/OWNER/REPO/pulls/NUMBER/merge-async`, with the API headers from [CLI/API](cli-and-api.md) and a structured JSON payload via `--input`. Set `sha` to the verified head, use `merge_action: "default"` to respect the configured queue, and leave `bypass_rules` false unless explicitly authorized. For a stacked PR, the request includes all open PRs below it; verify that whole scope first.
-
-- `202` accepts a background request; retain its UUID. `409` returns an existing pending request and its options: inspect those before tracking it instead of submitting again. Acceptance checks basic PR state; branch rules are evaluated during processing.
-- Poll `GET repos/OWNER/REPO/pulls/NUMBER/merge-async/UUID` with bounded waits. `pending` is unfinished; `failed` includes the reason; `merged` includes the merge commit SHA. `enqueued` is a terminal result for this API request, so switch to checking the PR's eventual merge state.
-- Results expire 24 hours after their last update. On a timeout, connection failure, or expired UUID, inspect the PR and queue state before retrying. Report a still-pending operation as pending, not complete.
+Authorized merge: read the current `headRefOid`, reviews, and checks, then `gh pr merge --match-head-commit <SHA>`; refresh if the head moves. On merge-queue branches the command enables auto-merge or queues the PR, so verify the final merged state. `--admin` bypasses requirements and needs explicit intent. Stacked PRs: [Stacks](stacks.md).
 
 ## Worktrees and cleanup
 
-`gh pr checkout <PR> --worktree <path>` and `gh issue develop <issue> --checkout --worktree <path>` reject non-empty targets before branch creation and reuse existing linked worktrees. `gh repo sync` refuses branches checked out elsewhere.
+`gh pr checkout <PR> --worktree <path>` and `gh issue develop <issue> --checkout --worktree <path>` reject non-empty targets and reuse existing linked worktrees. `gh repo sync` refuses branches checked out elsewhere.
 
-Check merged state before authorized branch deletion. `gh pr merge --delete-branch` still deletes the remote branch when dirty local cleanup is skipped. For stacked PRs, read [Stacks](stacks.md).
+`gh pr merge --delete-branch` deletes the remote branch even when dirty local cleanup is skipped.
 
 ## Reviews
 
-Read `gh pr view --json reviewDecision,latestReviews,reviews` and inspect author logins and review bodies. Copilot (`copilot-pull-request-reviewer`) can count toward required approval in opted-in repos; new commits dismiss its approval. `APPROVED` does not prove human approval.
+Read `gh pr view --json reviewDecision,latestReviews,reviews` and check author logins. Copilot (`copilot-pull-request-reviewer`) can count toward required approval in opted-in repos, so `APPROVED` does not prove human approval; new commits dismiss its approval. Its overview findings may have no inline comment, and rereviews can auto-resolve threads (including "Won't Fix"/"Incorrect"); verify fixes independently.
 
-Copilot overview findings may have no inline comment. Rereviews can auto-resolve threads, including “Won't Fix”/“Incorrect”; refresh state and verify fixes independently of resolution.
-
-PR JSON has no `reviewThreads`. REST `repos/OWNER/REPO/pulls/NUMBER/comments --paginate` gives line comments; for thread IDs/state, select inside GraphQL `repository { pullRequest(number: $number) { ... } }` with `$endCursor: String`:
+PR JSON has no `reviewThreads`. Line comments: REST `repos/OWNER/REPO/pulls/NUMBER/comments --paginate`. Thread IDs/state: GraphQL under `repository { pullRequest(number: $number) { ... } }` with `$endCursor: String`:
 
 ```graphql
 reviewThreads(first: 100, after: $endCursor) {
@@ -43,24 +33,25 @@ reviewThreads(first: 100, after: $endCursor) {
 }
 ```
 
-Paginate each nested `comments` connection by thread ID and its own cursor. Authorized `resolveReviewThread` / `unresolveReviewThread` takes `threadId`; re-query `isResolved` afterward.
+Paginate each nested `comments` by thread ID. Authorized `resolveReviewThread` / `unresolveReviewThread` take `threadId`; re-query `isResolved` after.
+
+## Waiting for events
+
+`gh event listen --resource <PR-URL> --event <type>[,<type>] --timeout 30m` (v2.105.0+, preview; enrolled github.com accounts only) waits for a PR change instead of polling. Types under `com.github.pull_request.`: `review.submitted.v1`, `state.changed.v1`, `head.changed.v1`, `merge_conflict.v1`, `check_suite.status.changed.v1`.
+
+- Exits after one event (`--count`, `--follow`); timeout exits 8. Fetch `data.api_url` for what changed.
+- Nothing is replayed: read PR state once attached and after any reconnect.
+- Each check suite sends its own event; confirm all checks with `gh pr checks`.
+- Listening creates or reuses a subscription (24 h expiry, per-account limit; `gh event subscription list`).
 
 ## Missing objects
 
-PRs/issues share numbers: on failed views, query both `repos/OWNER/REPO/pulls/NUMBER` and `repos/OWNER/REPO/issues/NUMBER` with `gh api --include` to distinguish type, redirects, access, and deletion.
+PRs and issues share numbers: query both `repos/OWNER/REPO/pulls/NUMBER` and `.../issues/NUMBER` with `gh api --include` to tell type, redirect, access, or deletion apart.
 
-Admin-archived PRs are closed/locked but return 404 to non-admins. Check admin access or `is:archived` search; the audited CLI lacks an archived PR JSON field/`--state archived`.
+Admin-archived PRs are closed/locked and 404 for non-admins; check admin access or `is:archived` search (the CLI has no archived field or `--state archived`).
 
-Discussion JSON omits full thread pagination; use GraphQL for complete threads/unexposed fields. If unavailable, check repository `hasDiscussionsEnabled`.
+Discussion JSON omits full threads; use GraphQL. If missing, check repository `hasDiscussionsEnabled`.
 
 ## Attachments
 
-`--attach <path>[#alt text]` requires push access and explicit intent; GHES is unsupported. Check command help and account upload limits; Free-plan video limits can be lower than the CLI cap. Videos have no alt text.
-
-With `--body-file`, relative attachment paths and Markdown destinations resolve against the body file's directory first, then the working directory. Matching local image references become uploaded URLs with their alt text; unmatched files append. Partial upload failure can create the object with successful files, print its URL, and exit nonzero. Inspect that object before retrying to avoid duplicates. Current clients defer token eligibility to the upload endpoint; some GitHub App tokens are accepted, others are refused even with write access.
-
-## Issue artifacts
-
-`gh issue artifact` (v2.103.0+, private preview at audit) manages documents and links attached to issues. Use `list`/`view` to inspect them; Actions artifacts use `gh run download`. Command availability does not imply repository enrollment.
-
-Batch `create` can partially succeed and exit 1; inspect its per-item results and retry only failed items. `edit --restore-version N` saves a new version; it does not erase history. Confirm the issue, artifact, and requested change before mutations.
+`--attach <path>[#alt text]` (not on GHES) needs push access and explicit intent. Body references to an attached file become uploaded URLs; unmatched files are appended. With `--body-file`, relative paths resolve against the body file's directory, then the working directory. A partial upload failure can still create the object and exit nonzero: inspect it before retrying. The upload endpoint refuses some GitHub App tokens.

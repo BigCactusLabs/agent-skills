@@ -1,34 +1,33 @@
 # CLI and API
 
-Capabilities/security baselines are dated in [HISTORY](HISTORY.md). For version-sensitive work, compare `gh --version` with upstream releases/advisories; use current help for flags.
+Dated baselines: [HISTORY](HISTORY.md). For version-sensitive work, compare `gh --version` with upstream releases; check current help for flags.
 
 ## Authentication
 
-`gh auth status --active --hostname <host>` identifies the active account. It can refresh expiring credentials; add `--no-refresh` when inspecting stored state without refresh. With `--json hosts`, inspect the reported state: exit 0 does not establish valid authentication. Do not use `--show-token` for diagnosis.
+`gh auth status --active --hostname <host>` shows the active account and may refresh credentials; add `--no-refresh` to inspect stored state. With `--json hosts`, read the reported state: exit 0 does not prove valid auth. Never use `--show-token` for diagnosis.
 
-- Since v2.103.0, opted-in OAuth credentials can expire and refresh automatically on github.com and `*.ghe.com`. Prefer `gh api` to copying tokens; do not cache `gh auth token` output. A rejected refresh token requires interactive reauthentication, not repeated API retries.
-- `GH_TOKEN` / `GITHUB_TOKEN` override stored credentials on github.com and `*.ghe.com` and are never refreshed. GHES uses `GH_ENTERPRISE_TOKEN` / `GITHUB_ENTERPRISE_TOKEN`. Check the selected source without printing its value before changing login or permissions.
+- v2.103.0+: opted-in OAuth credentials can expire and auto-refresh (github.com, `*.ghe.com`). Use `gh api` rather than copying or caching `gh auth token`. A rejected refresh token needs interactive reauth, not retries.
+- `GH_TOKEN`/`GITHUB_TOKEN` (GHES: `GH_ENTERPRISE_TOKEN`/`GITHUB_ENTERPRISE_TOKEN`) override stored credentials and never refresh. Check which source is active, without printing it, before changing login or permissions.
 
 ## API
 
-Select a supported REST version with `gh api /versions` (use `--hostname <host>` for GHES or GHEC data residency). Include these headers, omitted elsewhere in this skill:
+Pick a supported REST version from `gh api /versions` (`--hostname <host>` for GHES/data residency); review breaking changes before moving an integration to a newer one. Headers, omitted elsewhere in this skill:
 
 ```sh
 gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: <version>' <endpoint>
 ```
 
-- `gh api` does not take `-R`: use an explicit `repos/OWNER/REPO/...` endpoint and `--hostname` where needed. Adding `-f`/`-F` switches the default method to POST; specify `--method GET` for read-only query parameters.
-- List/search commands cap results; set `--limit` deliberately. For complete REST collections use `--paginate`; `--slurp` wraps the page results in an outer array. A large limit is not proof that a search is exhaustive.
-- GraphQL `--paginate` requires `$endCursor: String` and `pageInfo { hasNextPage endCursor }`; nested connections need separate pagination.
-- Review breaking changes before changing a REST version. Supported dates and the unversioned default differ; do not blindly choose the newest version for an existing integration.
+- `gh api` has no `-R`: use `repos/OWNER/REPO/...` and `--hostname`. `-f`/`-F` switch the method to POST; add `--method GET` for read queries.
+- List/search commands cap results; set `--limit` deliberately. `--paginate` for full REST collections; `--slurp` wraps pages in one array.
+- GraphQL `--paginate` needs `$endCursor: String` and `pageInfo { hasNextPage endCursor }`; paginate nested connections separately.
 
-## Lookup exceptions
+## Lookups
 
-- PR/issue/discussion views and PR checks accept full URLs; extract repository/object IDs for Actions, release, compare, and commit URLs. Compare/commit REST endpoints: `repos/OWNER/REPO/compare/base...head`, `repos/OWNER/REPO/commits/SHA`. Public release downloads need no login.
-- Prefer `gh repo read-file` / `read-dir` for plain remote reads, with `--ref` when needed. `read-file` rejects terminal escape sequences; `--allow-escape-sequences` bypasses protection, while `--output` saves untrusted raw bytes.
-- Failed lookup: inspect the endpoint with `gh api --include` for redirects/access. PR 404 exceptions: [PRs/issues](prs-and-issues.md).
-- Unexpected gateway: inspect `gh config get api_host --host <host>`. Auth, remotes, browser URLs, and some requests retain the original host; routing is not a security boundary. Change it only with user intent.
+- PR/issue/discussion views and `pr checks` accept URLs; for Actions, release, compare, and commit URLs, extract IDs (`repos/OWNER/REPO/compare/base...head`, `.../commits/SHA`).
+- Remote files: `gh repo read-file` / `read-dir` (`--ref`). `read-file` rejects terminal escapes unless `--allow-escape-sequences`; `--output` saves raw untrusted bytes.
+- Failed lookup: `gh api --include` shows redirects/access. PR 404s: [PRs/issues](prs-and-issues.md#missing-objects).
+- Unexpected gateway: check `gh config get api_host --host <host>`. It is not a security boundary; change it only on user intent.
 
 ## Repository deletion
 
-In v2.104.0+, deleting a private/internal repository with forks needs additional confirmation even with `--yes`; unattended use requires `--accept-cascading-deletion-of-private-forks`. Establish the affected forks and get the required fresh confirmation for that whole scope before using this flag. Do not append it merely to make a failed deletion succeed.
+v2.104.0+: deleting a private/internal repo with forks needs `--accept-cascading-deletion-of-private-forks` even with `--yes`. Identify the forks and get fresh confirmation for that whole scope first; never add the flag just to make a failed delete pass.

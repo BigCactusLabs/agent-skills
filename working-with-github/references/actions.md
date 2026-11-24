@@ -4,39 +4,29 @@ API conventions: [CLI/API](cli-and-api.md); dated findings: [HISTORY](HISTORY.md
 
 ## Runs and checks
 
-Inspect `gh run view <run-id> --json attempt,headSha,status,conclusion,jobs`; read logs separately with `gh run view <run-id> --log-failed`. Apply known `--attempt` to both; identify the repository outside its checkout.
+Status: `gh run view <run-id> --json attempt,headSha,status,conclusion,jobs`; logs: `gh run view <run-id> --log-failed`. Pass a known `--attempt` to both.
 
-- After PR creation/update, use `gh pr checks <PR> --watch`; `--required` limits results to merge-blocking checks. Without watch, exit 8 = pending.
-- Queued reruns can leave an old passing check visible. Verify the specific run/attempt, current head SHA, status, and conclusion after reruns; exit 0 alone is insufficient. External checks: `gh api repos/OWNER/REPO/commits/SHA/check-runs --paginate`.
-- Single-job reruns take `jobs[].databaseId` from `gh run view <run-id> --json jobs`, not the browser job URL number.
-- If a fine-grained PAT lacks watch's `checks:read`, poll `gh run view <run-id> --json status,conclusion`.
-- Missing/`UNKNOWN STEP` logs: try `gh run view --job <job-id> --log-failed`, then `gh api -i repos/OWNER/REPO/actions/runs/<run-id>/logs` and follow `Location`. Background steps log separately; match names, not positions.
-
-For stack-specific job selection and CI savings, read [Stack-aware CI](stacks.md#stack-aware-ci).
+- After PR create/update: `gh pr checks <PR> --watch` (`--required` for merge-blocking only). Without watch, exit 8 = pending. Without polling: [`gh event listen`](prs-and-issues.md#waiting-for-events).
+- Queued reruns can leave an old pass visible. Verify the specific run/attempt, head SHA, status, and conclusion; exit 0 alone is not enough. External checks: `gh api repos/OWNER/REPO/commits/SHA/check-runs --paginate`.
+- Single-job reruns use `jobs[].databaseId`, not the job number in the browser URL.
+- Fine-grained PAT without `checks:read`: poll `gh run view <run-id> --json status,conclusion` instead of `--watch`.
+- Missing or `UNKNOWN STEP` logs: try `gh run view --job <job-id> --log-failed`, then `gh api -i repos/OWNER/REPO/actions/runs/<run-id>/logs` and follow `Location`. Background steps log separately; match by name.
 
 ## Permissions, cache, and history
 
-For permission/cache/checkout failures, establish trigger, actor trust, head/base repos, checked-out ref, token permissions, execution policy, and effective `cache-mode`. Denied saves or protected fork-head checkout under `pull_request_target` may be intentional. Do not recommend `allow-unsafe-pr-checkout` or broader permissions without explicit intent and a concrete security review.
+For permission/cache/checkout failures, establish trigger, actor trust, head/base repos, checked-out ref, token permissions, execution policy, and effective `cache-mode`. Denied saves or blocked fork checkouts under `pull_request_target` may be intentional. Don't recommend `allow-unsafe-pr-checkout` or broader permissions without explicit intent.
 
-- `cache-mode` job settings override workflow settings; reusable workflows cannot exceed caller access. Untrusted default-branch scopes default to read-only; explicit `write`/`write-only` can override this and warn. Check effective mode for save/restore failures; do not grant writes to silence warnings.
-- Rejected dispatches can reflect actor/event policy. Inspect execution policy/Insights before changing workflows. The default `pull_request_target` block for public repos without an explicit applicable allow policy is scheduled for December 2, 2026, moved from November 2. November 9 and 16 brownouts run 16:00–18:00 UTC; blocked attempts create failed runs without executing the workflow. Private/internal repos and GHES are excluded. Recheck the [announcement](https://github.blog/changelog/2026-11-02-pull_request_target-blocked-by-default-december-2/) when diagnosing rollout behavior.
-- Empty CI history can mean expiry. Since October 1, 2026, checks/runs/statuses on github.com follow Actions retention (default 90 days; public cap 90), including third-party checks/statuses. Raising retention does not restore removed data. Check retention before claiming CI never ran.
+- Job `cache-mode` overrides workflow; reusable workflows can't exceed caller access. Untrusted default-branch scopes default to read-only; explicit `write`/`write-only` overrides with a warning. Don't grant writes to silence warnings.
+- Rejected dispatches can be actor/event policy: check execution policy/Insights before editing workflows. From December 2, 2026, public repos block `pull_request_target` by default without an applicable allow policy (private/internal and GHES excluded); blocked attempts create failed runs that never executed.
+- Empty CI history can mean expiry: since October 1, 2026, github.com checks/runs/statuses (including third-party) follow Actions retention (default 90 days). Raising retention doesn't restore data.
 
 ## Dependency lockfiles
 
-`.github/workflows/actions.lock`, generated by extension `gh actions-lock`, pins action dependencies for onboarded workflows, including transitive actions. Inspect it for missing pins or unexpected commit/repository identity changes when CI resolution fails. Reusable workflow calls still need their own full-SHA references; their action dependencies use the called repository's lockfile.
+`.github/workflows/actions.lock`, generated by extension `gh actions-lock`, pins action dependencies (including transitive) for onboarded workflows. On resolution failures, check it for missing pins or changed commit/repo identity. Reusable workflow calls still need full-SHA refs; container images aren't locked (pin digests). Generate via the extension, not by hand, and review the full diff, since it can rewrite workflow refs.
 
-Generate through the extension rather than hand-editing. Generation can also rewrite workflow references, so inspect the full diff. Check installed help before selecting a mode; [v0.4.1](https://github.com/github/gh-actions-lock/blob/v0.4.1/README.md) supports:
+Modes in [v0.5.1](https://github.com/github/gh-actions-lock/blob/v0.5.1/README.md) (check installed help):
 
-| Command | Writes files | Checks |
-| --- | --- | --- |
-| `gh actions-lock --verify-local` | No | Offline dependency coverage only; does not verify provenance |
-| `gh actions-lock --verify` | No | Coverage and provenance using network lookups |
-| `gh actions-lock --no-fix` | No | Read-only report with network lookups |
-| `gh actions-lock` / `--relock` | Yes | Generate/update locks or advance moved references |
+Read-only: `--verify-local` (offline coverage, not provenance), `--verify` (coverage and provenance), `--no-fix` (report). Bare or `--relock` writes the lockfile and advances moved refs.
 
-Container images are not locked; pin their digests separately. Local `./…` actions with remote action dependencies need explicit handling, and migrating to `$/…` changes which commit supplies the action. Inspect these cases before adoption. Do not use `--accept-moved` in automation or treat offline coverage as provenance proof. Do not install or adopt the extension merely to inspect a repository. See [dependency lockfiles](https://docs.github.com/en/actions/concepts/security/workflow-dependency-lockfiles) and [generation and update rules](https://docs.github.com/en/actions/how-tos/secure-your-work/lock-workflow-dependencies).
-
-Optional security check: zizmor v1.32.0 adds [experimental lockfile support](https://docs.zizmor.sh/usage/#workflow-lockfiles). For repositories that use zizmor, check its version and documented limits before interpreting lockfile-related findings. Trial adoption on one repository, keep findings visible, and retain separate pins for uncovered dependencies. The [maintainer's tracking issue](https://github.com/zizmorcore/zizmor/issues/2477) records ongoing work; this is not a mandatory check for every GitHub operation.
-
-Agentic Workflow `*.lock.yml` files are compiled workflow YAML, a separate artifact: [Agents](agents.md).
+Read-only modes exit 0 on warnings unless `--fail-on-warning`. Local `./…` actions that use remote actions block until `--migrate-local-actions` (rewrites workflow refs to `$/…`, changing which commit supplies the action) or `--ignore-local-actions`; action files are never edited. Never use `--accept-moved` in automation.
+Agentic Workflow `*.lock.yml` files are a different thing: [Agents](agents.md).
